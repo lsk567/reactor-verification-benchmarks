@@ -1,0 +1,480 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // Tag algebra
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && pi1(i) == 0 && !isInf(i))
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+            then { pi1(t) + pi1(i), 0 }
+            else inf());
+    
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        simultaneity_source_reaction_0,
+        simultaneity_sink_reaction_0,
+        simultaneity_a_reaction_1,
+        simultaneity_sink_reaction_1,
+        simultaneity_b_reaction_1,
+        simultaneity_a_reaction_0,
+        simultaneity_b_reaction_0,
+        NULL
+    };
+    type state_t = {
+        integer, 	// simultaneity.sink.s1
+        integer, 	// simultaneity.sink.s2
+        integer, 	// simultaneity.a.s
+        integer, 	// simultaneity.b.s
+        integer, 	// simultaneity.a.out
+        integer, 	// simultaneity.sink.in1
+        integer, 	// simultaneity.b.out
+        integer, 	// simultaneity.source.out1
+        integer, 	// simultaneity.a.in
+        integer, 	// simultaneity.source.in
+        integer, 	// simultaneity.b.in
+        integer, 	// simultaneity.source.out2
+        integer 	// simultaneity.sink.in2
+    };
+    // State variable projection macros
+    define simultaneity_sink_s1(s : state_t) : integer = s._1;
+    define simultaneity_sink_s2(s : state_t) : integer = s._2;
+    define simultaneity_a_s(s : state_t) : integer = s._3;
+    define simultaneity_b_s(s : state_t) : integer = s._4;
+    define simultaneity_a_out(s : state_t) : integer = s._5;
+    define simultaneity_sink_in1(s : state_t) : integer = s._6;
+    define simultaneity_b_out(s : state_t) : integer = s._7;
+    define simultaneity_source_out1(s : state_t) : integer = s._8;
+    define simultaneity_a_in(s : state_t) : integer = s._9;
+    define simultaneity_source_in(s : state_t) : integer = s._10;
+    define simultaneity_b_in(s : state_t) : integer = s._11;
+    define simultaneity_source_out2(s : state_t) : integer = s._12;
+    define simultaneity_sink_in2(s : state_t) : integer = s._13;
+    
+    //////////////////////////
+    
+    /********************
+    * Trace Definition *
+    *******************/
+    const START : integer = 0;
+    const END : integer = 9;
+    
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t };
+    
+    // Generate 10 events for 9-induction.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * helper macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    if (i == 3) then tr._4 else (
+    if (i == 4) then tr._5 else (
+    if (i == 5) then tr._6 else (
+    if (i == 6) then tr._7 else (
+    if (i == 7) then tr._8 else (
+    if (i == 8) then tr._9 else (
+    if (i == 9) then tr._10 else (
+    { NULL, inf(), { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } } ))))))))));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t    = elem(i)._1;
+    define g        (i : step_t) : tag_t    = elem(i)._2;
+    define s        (i : step_t) : state_t  = elem(i)._3;
+    define isNULL   (i : step_t) : boolean  = rxn(i) == NULL;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Delay macro
+    define delay(r1, r2 : rxn_t) : interval_t =
+        if (r1 == simultaneity_a_reaction_0 && r2 == simultaneity_a_reaction_1) then nsec(1000000) else (
+        if (r1 == simultaneity_a_reaction_1 && r2 == simultaneity_sink_reaction_0) then nsec(0) else (
+        if (r1 == simultaneity_b_reaction_0 && r2 == simultaneity_b_reaction_1) then nsec(1000000) else (
+        if (r1 == simultaneity_b_reaction_1 && r2 == simultaneity_sink_reaction_1) then nsec(0) else (
+        if (r1 == simultaneity_source_reaction_0 && r2 == simultaneity_a_reaction_0) then nsec(0) else (
+        if (r1 == simultaneity_source_reaction_0 && r2 == simultaneity_b_reaction_0) then nsec(0) else (
+        inf()
+        ))))));
+    
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            || (tag_same(e1._2, e2._2) && (
+            (e1._1 == simultaneity_a_reaction_0 && e2._1 == simultaneity_a_reaction_1)
+            || (e1._1 == simultaneity_a_reaction_1 && e2._1 == simultaneity_sink_reaction_0)
+            || (e1._1 == simultaneity_b_reaction_0 && e2._1 == simultaneity_b_reaction_1)
+            || (e1._1 == simultaneity_b_reaction_1 && e2._1 == simultaneity_sink_reaction_1)
+            || (e1._1 == simultaneity_source_reaction_0 && e2._1 == simultaneity_a_reaction_0)
+            || (e1._1 == simultaneity_source_reaction_0 && e2._1 == simultaneity_b_reaction_0)
+            ));
+    
+    define startup_triggers(n : rxn_t) : boolean
+    = // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (exists (i : integer) :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())))
+        // Can ONLY be triggered at (0,0).
+        && !(exists (j : integer) :: in_range(j) && rxn(j) == n
+            && !tag_same(g(j), zero()));
+    
+    // Note: The current formulation of "triggers" precludes
+    //       partial reaction triggering chain.
+    // This includes the possibility that upstream does NOT output.
+    define triggers_via_logical_action
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_schedule(g(j), delay)));
+    
+    define triggers_via_logical_connection
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_delay(g(j), delay)));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j))));
+    
+    // Tags should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    /***************
+    * Connections *
+    ***************/
+    
+    // simultaneity_a_out -> simultaneity_sink_in1 
+    axiom(forall (i : integer) :: (i >= START && i <= END)
+        ==> (
+            (rxn(i) == simultaneity_a_reaction_1 ==> simultaneity_sink_in1(s(i)) == simultaneity_a_out(s(i)))
+            && (rxn(i) != simultaneity_a_reaction_1 ==> simultaneity_sink_in1(s(i)) == simultaneity_sink_in1(s(i - 1)))
+        ));
+    
+    // simultaneity_b_out -> simultaneity_sink_in2 
+    axiom(forall (i : integer) :: (i >= START && i <= END)
+        ==> (
+            (rxn(i) == simultaneity_b_reaction_1 ==> simultaneity_sink_in2(s(i)) == simultaneity_b_out(s(i)))
+            && (rxn(i) != simultaneity_b_reaction_1 ==> simultaneity_sink_in2(s(i)) == simultaneity_sink_in2(s(i - 1)))
+        ));
+    
+    // simultaneity_source_out1 -> simultaneity_a_in 
+    axiom(forall (i : integer) :: (i >= START && i <= END)
+        ==> (
+            (rxn(i) == simultaneity_source_reaction_0 ==> simultaneity_a_in(s(i)) == simultaneity_source_out1(s(i)))
+            && (rxn(i) != simultaneity_source_reaction_0 ==> simultaneity_a_in(s(i)) == simultaneity_a_in(s(i - 1)))
+        ));
+    
+    // simultaneity_source_out2 -> simultaneity_b_in 
+    axiom(forall (i : integer) :: (i >= START && i <= END)
+        ==> (
+            (rxn(i) == simultaneity_source_reaction_0 ==> simultaneity_b_in(s(i)) == simultaneity_source_out2(s(i)))
+            && (rxn(i) != simultaneity_source_reaction_0 ==> simultaneity_b_in(s(i)) == simultaneity_b_in(s(i - 1)))
+        ));
+    
+    /********************
+    * Program Topology *
+    ********************/         
+    
+    // simultaneity.a.reaction_0 triggers simultaneity.a.reaction_1 via a logical action.
+    axiom(triggers_via_logical_action(simultaneity_a_reaction_0, simultaneity_a_reaction_1,
+        delay(simultaneity_a_reaction_0, simultaneity_a_reaction_1)));
+    
+    // simultaneity.a.reaction_1 triggers simultaneity.sink.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(simultaneity_a_reaction_1, simultaneity_sink_reaction_0,
+        delay(simultaneity_a_reaction_1, simultaneity_sink_reaction_0)));
+    
+    // simultaneity.b.reaction_0 triggers simultaneity.b.reaction_1 via a logical action.
+    axiom(triggers_via_logical_action(simultaneity_b_reaction_0, simultaneity_b_reaction_1,
+        delay(simultaneity_b_reaction_0, simultaneity_b_reaction_1)));
+    
+    // simultaneity.b.reaction_1 triggers simultaneity.sink.reaction_1 via a logical connection.
+    axiom(triggers_via_logical_connection(simultaneity_b_reaction_1, simultaneity_sink_reaction_1,
+        delay(simultaneity_b_reaction_1, simultaneity_sink_reaction_1)));
+    
+    // simultaneity.source.reaction_0 triggers simultaneity.a.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(simultaneity_source_reaction_0, simultaneity_a_reaction_0,
+        delay(simultaneity_source_reaction_0, simultaneity_a_reaction_0)));
+    
+    // simultaneity.source.reaction_0 triggers simultaneity.b.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(simultaneity_source_reaction_0, simultaneity_b_reaction_0,
+        delay(simultaneity_source_reaction_0, simultaneity_b_reaction_0)));
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && simultaneity_sink_s1(s(0)) == 0
+        && simultaneity_sink_s2(s(0)) == 0
+        && simultaneity_a_s(s(0)) == 0
+        && simultaneity_b_s(s(0)) == 0
+        && simultaneity_a_out(s(0)) == 0
+        && simultaneity_sink_in1(s(0)) == 0
+        && simultaneity_b_out(s(0)) == 0
+        && simultaneity_source_out1(s(0)) == 0
+        && simultaneity_a_in(s(0)) == 0
+        && simultaneity_source_in(s(0)) == 0
+        && simultaneity_b_in(s(0)) == 0
+        && simultaneity_source_out2(s(0)) == 0
+        && simultaneity_sink_in2(s(0)) == 0
+        ;
+        
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    /* Pre/post conditions for simultaneity.source.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_source_reaction_0 ==> (
+            simultaneity_source_out1(s(i)) == 1
+            && simultaneity_source_out2(s(i)) == 2
+    )));
+    
+    /* Pre/post conditions for simultaneity.sink.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_sink_reaction_0 ==> (
+            simultaneity_sink_s1(s(i)) == simultaneity_sink_in1(s(i))
+    )));
+    
+    /* Pre/post conditions for simultaneity.a.reaction_1 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_a_reaction_1 ==> (
+            simultaneity_a_out(s(i)) == simultaneity_a_s(s(i))
+    )));
+    
+    /* Pre/post conditions for simultaneity.sink.reaction_1 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_sink_reaction_1 ==> (
+            simultaneity_sink_s2(s(i)) == simultaneity_sink_in2(s(i))
+    )));
+    
+    /* Pre/post conditions for simultaneity.b.reaction_1 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_b_reaction_1 ==> (
+            simultaneity_b_out(s(i)) == simultaneity_b_s(s(i))
+    )));
+    
+    /* Pre/post conditions for simultaneity.a.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_a_reaction_0 ==> (
+            simultaneity_a_s(s(i)) == simultaneity_a_in(s(i))
+    )));
+    
+    /* Pre/post conditions for simultaneity.b.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == simultaneity_b_reaction_0 ==> (
+            simultaneity_b_s(s(i)) == simultaneity_b_in(s(i))
+    )));
+    
+    /**************
+    * Invariants *
+    **************/
+    
+    // [placeholder] Add user-defined properties here.
+    // In the form of AG?
+    // 
+    // Property: given a reaction == source_reaction_0 at t,
+    // sink_reaction_0 and sink_reaction_1 should be
+    // triggered at t + 1 msec.
+    //
+    // We are specifying properties relating multiple states.
+    // Does induction still hold?
+    // Yes, if we use propositional temporal logic (PTL)
+    //
+    // This doesn't work because g(0) is not guaranteed
+    // to be a source_reaction_0 that produces output
+    // (this can be eliminated by using the "definitely"
+    // variant of the topology axiom). Furthermore,
+    // this invariant does not hold because the trace
+    // allows multiple triggerings of source_reaction_0
+    // and therefore any formula about the time is not
+    // an invariant.
+    /*
+    define inv(i : step_t) : boolean =
+        (rxn(i) == simultaneity_sink_reaction_0
+            ==> g(i) == tag_schedule(g(0), msec(1)))
+        && (rxn(i) == simultaneity_sink_reaction_1
+            ==> g(i) == tag_schedule(g(0), msec(1)));
+    */
+    /*
+    define inv(i : step_t) : boolean =
+        (rxn(0) == simultaneity_source_reaction_0
+            && !(exists (j : integer) :: j > 0
+                && rxn(j) == simultaneity_source_reaction_0))
+        ==> (
+            (rxn(i) == simultaneity_sink_reaction_0)
+                ==> (g(i) == tag_schedule(g(0), msec(1)))
+            && (rxn(i) == simultaneity_sink_reaction_1
+                ==> g(i) == tag_schedule(g(0), msec(1)))
+        );
+    */
+    // This formulation is better since it does not make the assumption
+    // that source_reaction_0 triggers once at the beginning.
+    define inv(i : step_t) : boolean =
+        (rxn(i) == simultaneity_sink_reaction_0
+            ==> (
+                exists (j : integer) :: j < i
+                    && rxn(j) == simultaneity_source_reaction_0
+                    && g(i) == tag_schedule(g(j), msec(1))
+            )
+        )
+        && (rxn(i) == simultaneity_sink_reaction_1
+            ==> (
+                exists (j : integer) :: j < i
+                    && rxn(j) == simultaneity_source_reaction_0
+                    && g(i) == tag_schedule(g(j), msec(1))
+            )
+        );
+    
+    // Auxiliary invariant
+    define auxiliary_invariant(i : integer) : boolean =
+        true;   // TODO: replace
+    //////////////////////////////////////////////////
+    
+    /***************
+    * K-induction *
+    ***************/
+    // initialization
+    property initialization : initial_condition() ==>
+        (forall (i : integer) ::
+            (i >= START && i <= END)
+                ==> (
+                    inv(i)
+                    && auxiliary_invariant(i)
+                ));
+    
+    // Note: state 0 needs to be unconstrained.
+    // consecution
+    property consecution : (forall (i : integer) ::
+        (i >= START && i < END) ==> (inv(i) && auxiliary_invariant(i)))
+            ==> (inv(END) && auxiliary_invariant(END));
+    
+    control {
+        v = unroll(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+    
+}

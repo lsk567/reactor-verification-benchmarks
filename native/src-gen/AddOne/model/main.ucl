@@ -1,0 +1,273 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // Tag algebra
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && pi1(i) == 0 && !isInf(i))
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+            then { pi1(t) + pi1(i), 0 }
+            else inf());
+    
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        AddOne_a_reaction_0,
+        NULL
+    };
+    type state_t = {
+        integer, 	// AddOne.a._in
+        integer 	// AddOne.a.out
+    };
+    // State variable projection macros
+    define AddOne_a__in(s : state_t) : integer = s._1;
+    define AddOne_a_out(s : state_t) : integer = s._2;
+    
+    //////////////////////////
+    
+    /********************
+    * Trace Definition *
+    *******************/
+    const START : integer = 0;
+    const END : integer = 2;
+    
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t };
+    
+    // Generate 3 events for 2-induction.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * helper macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    { NULL, inf(), { 0, 0 } } )));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t    = elem(i)._1;
+    define g        (i : step_t) : tag_t    = elem(i)._2;
+    define s        (i : step_t) : state_t  = elem(i)._3;
+    define isNULL   (i : step_t) : boolean  = rxn(i) == NULL;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Delay macro
+    define delay(r1, r2 : rxn_t) : interval_t =
+        inf()
+        ;
+    
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            ;
+    
+    define startup_triggers(n : rxn_t) : boolean
+    = // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (exists (i : integer) :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())))
+        // Can ONLY be triggered at (0,0).
+        && !(exists (j : integer) :: in_range(j) && rxn(j) == n
+            && !tag_same(g(j), zero()));
+    
+    // Note: The current formulation of "triggers" precludes
+    //       partial reaction triggering chain.
+    // This includes the possibility that upstream does NOT output.
+    define triggers_via_logical_action
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_schedule(g(j), delay)));
+    
+    define triggers_via_logical_connection
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_delay(g(j), delay)));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j))));
+    
+    // Tags should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    /***************
+    * Connections *
+    ***************/
+    
+    /********************
+    * Program Topology *
+    ********************/         
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && AddOne_a__in(s(0)) == 0
+        && AddOne_a_out(s(0)) == 0
+        ;
+        
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    /* Pre/post conditions for AddOne.a.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == AddOne_a_reaction_0 ==> (
+            AddOne_a_out(s(i)) == AddOne_a__in(s(i)) + 1
+    )));
+    
+    /**************
+    * Invariants *
+    **************/
+    
+    // [placeholder] Add user-defined properties here.
+    define inv(i : step_t) : boolean =
+        rxn(i) == AddOne_a_reaction_0 ==> AddOne_a_out(s(i)) < 10;
+    
+    // Auxiliary invariant
+    define auxiliary_invariant(i : integer) : boolean =
+        true;   // TODO: replace
+    //////////////////////////////////////////////////
+    
+    /***************
+    * K-induction *
+    ***************/
+    // initialization
+    property initialization : initial_condition() ==>
+        (forall (i : integer) ::
+            (i >= START && i <= END)
+                ==> (
+                    inv(i)
+                    && auxiliary_invariant(i)
+                ));
+    
+    // Note: state 0 needs to be unconstrained.
+    // consecution
+    property consecution : (forall (i : integer) ::
+        (i >= START && i < END) ==> (inv(i) && auxiliary_invariant(i)))
+            ==> (inv(END) && auxiliary_invariant(END));
+    
+    control {
+        v = unroll(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+    
+}

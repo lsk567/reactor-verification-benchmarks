@@ -1,0 +1,100 @@
+target C {
+    verification: {
+        engine: uclid,
+        tactic: induction,
+        steps:  9
+    }
+};
+
+reactor Source {
+    input in:int;
+    output out1:int;
+    output out2:int;
+
+    // @post out1 == 1 && out2 == 2
+    reaction(in) -> out1, out2 {=
+        SET(out1, 1);
+        SET(out2, 2);
+    =}
+}
+
+reactor A {
+    input in:int;
+    output out:int;
+    state s:int(0);
+
+    logical action delay(1 msec);
+
+    // @post s == in
+    reaction(in) -> delay {=
+        self->s = in->value;
+        schedule(delay, 0);
+    =}
+
+    // @post out == s
+    reaction(delay) -> out {=
+        SET(out, self->s);
+    =}
+}
+
+reactor B {
+    input in:int;
+    output out:int;
+    state s:int(0);
+
+    logical action delay(1 msec);
+
+    // @post s == in
+    reaction(in) -> delay {=
+        self->s = in->value;
+        schedule(delay, 0);
+    =}
+
+    // @post out == s
+    reaction(delay) -> out {=
+        SET(out, self->s);
+    =}
+}
+
+reactor Sink {
+    input in1:int;
+    input in2:int;
+    state s1:int(0);
+    state s2:int(0);
+
+    // @post s1 == in1
+    reaction(in1) {=
+        self->s1 = in1->value;
+    =}
+
+    // @post s2 == in2
+    reaction(in2) {=
+        self->s2 = in2->value;
+    =}
+}
+
+// What we want:
+//     "At logical time t = msec(1), both in1 and in2 in Sink trigger."
+// An equivalent way of saying this is
+//     "Both in1 and in2 in Sink trigger at logical time t = msec(1)."
+// This is where English and logical formula diverge.
+// In English, "at logical time t = msec(1)" is a subordinate clause
+// that can be placed both in the front and in the back. But in FOL,
+// this clause needs to be the antecedent for the property to make sense.
+//
+// t == msec(1) ==> (rxn == in1 || rxn == in2)
+//     is different from
+// (rxn == in1 || rxn == in2) ==> t == msec(1)
+//
+// We also need to assume that t_in (at Source) starts at (0,0).
+main reactor {
+    source = new Source();
+    sink = new Sink();
+    a = new A();
+    b = new B();
+
+    source.out1 -> a.in;
+    source.out2 -> b.in;
+    a.out -> sink.in1;
+    b.out -> sink.in2;
+}

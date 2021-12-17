@@ -1,0 +1,24 @@
+target C {
+    verification: {
+        engine: uclid,
+        tactic: induction,
+        steps: 2
+    }
+};
+
+// @inv: rxn(i) == AddOne_a_reaction_0 ==> AddOne_a_out(s(i)) == AddOne_a__in(s(i)) + 1
+// @inv: rxn(i) == AddOne_a_reaction_0 ==> AddOne_a_out(s(i)) != AddOne_a__in(s(i))
+// @inv: rxn(i) == AddOne_a_reaction_0 ==> AddOne_a_out(s(i)) < 10
+reactor _AddOne {
+    input  _in:int;
+    output out:int;
+   
+    // @post: AddOne_a_out(s(i)) == AddOne_a__in(s(i)) + 1
+    reaction(_in) -> out {=
+        SET(out, _in->value + 1);
+    =}
+}
+
+main reactor {
+    a = new _AddOne();
+}
