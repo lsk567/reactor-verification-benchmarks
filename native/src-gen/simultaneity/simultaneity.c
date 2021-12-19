@@ -502,7 +502,7 @@ void _lf_initialize_trigger_objects() {
     simultaneity_a_self->_lf_in_width = -2;
     static int simultaneity_a_initial_s = 0;
     simultaneity_a_self->s = simultaneity_a_initial_s;
-    simultaneity_a_self->_lf__delay.offset = MSEC(1);
+    simultaneity_a_self->_lf__delay.offset = NSEC(1);
     simultaneity_a_self->_lf__delay.period = -1;
     simultaneity_a_self->_lf__delay.token = _lf_create_token(0);
     simultaneity_a_self->_lf__delay.status = absent;

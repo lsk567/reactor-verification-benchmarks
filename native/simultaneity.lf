@@ -23,7 +23,7 @@ reactor A {
     output out:int;
     state s:int(0);
 
-    logical action delay(1 msec);
+    logical action delay(1 nsec);
 
     // @post s == in
     reaction(in) -> delay {=

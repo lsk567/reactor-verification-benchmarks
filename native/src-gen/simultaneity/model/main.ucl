@@ -185,7 +185,7 @@ module main {
     ***************************/
     // Delay macro
     define delay(r1, r2 : rxn_t) : interval_t =
-        if (r1 == simultaneity_a_reaction_0 && r2 == simultaneity_a_reaction_1) then nsec(1000000) else (
+        if (r1 == simultaneity_a_reaction_0 && r2 == simultaneity_a_reaction_1) then nsec(1) else (
         if (r1 == simultaneity_a_reaction_1 && r2 == simultaneity_sink_reaction_0) then nsec(0) else (
         if (r1 == simultaneity_b_reaction_0 && r2 == simultaneity_b_reaction_1) then nsec(1000000) else (
         if (r1 == simultaneity_b_reaction_1 && r2 == simultaneity_sink_reaction_1) then nsec(0) else (
@@ -392,45 +392,11 @@ module main {
     **************/
     
     // [placeholder] Add user-defined properties here.
-    // In the form of AG?
-    // 
+    //
+    // FIXME: revise.
     // Property: given a reaction == source_reaction_0 at t,
     // sink_reaction_0 and sink_reaction_1 should be
     // triggered at t + 1 msec.
-    //
-    // We are specifying properties relating multiple states.
-    // Does induction still hold?
-    // Yes, if we use propositional temporal logic (PTL)
-    //
-    // This doesn't work because g(0) is not guaranteed
-    // to be a source_reaction_0 that produces output
-    // (this can be eliminated by using the "definitely"
-    // variant of the topology axiom). Furthermore,
-    // this invariant does not hold because the trace
-    // allows multiple triggerings of source_reaction_0
-    // and therefore any formula about the time is not
-    // an invariant.
-    /*
-    define inv(i : step_t) : boolean =
-        (rxn(i) == simultaneity_sink_reaction_0
-            ==> g(i) == tag_schedule(g(0), msec(1)))
-        && (rxn(i) == simultaneity_sink_reaction_1
-            ==> g(i) == tag_schedule(g(0), msec(1)));
-    */
-    /*
-    define inv(i : step_t) : boolean =
-        (rxn(0) == simultaneity_source_reaction_0
-            && !(exists (j : integer) :: j > 0
-                && rxn(j) == simultaneity_source_reaction_0))
-        ==> (
-            (rxn(i) == simultaneity_sink_reaction_0)
-                ==> (g(i) == tag_schedule(g(0), msec(1)))
-            && (rxn(i) == simultaneity_sink_reaction_1
-                ==> g(i) == tag_schedule(g(0), msec(1)))
-        );
-    */
-    // This formulation is better since it does not make the assumption
-    // that source_reaction_0 triggers once at the beginning.
     define inv(i : step_t) : boolean =
         (rxn(i) == simultaneity_sink_reaction_0
             ==> (
@@ -446,7 +412,7 @@ module main {
                     && g(i) == tag_schedule(g(j), msec(1))
             )
         );
-    
+
     // Auxiliary invariant
     define auxiliary_invariant(i : integer) : boolean =
         true;   // TODO: replace

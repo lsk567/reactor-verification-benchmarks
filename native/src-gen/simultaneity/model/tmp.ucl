@@ -417,7 +417,6 @@ module main {
         && (rxn(i) == simultaneity_sink_reaction_1
             ==> g(i) == tag_schedule(g(0), msec(1)));
     */
-    /*
     define inv(i : step_t) : boolean =
         (rxn(0) == simultaneity_source_reaction_0
             && !(exists (j : integer) :: j > 0
@@ -428,7 +427,6 @@ module main {
             && (rxn(i) == simultaneity_sink_reaction_1
                 ==> g(i) == tag_schedule(g(0), msec(1)))
         );
-    */
     // This formulation is better since it does not make the assumption
     // that source_reaction_0 triggers once at the beginning.
     define inv(i : step_t) : boolean =
