@@ -1,0 +1,37 @@
+target C {
+    verification: {
+        engine: uclid,
+        tactic: induction,
+        steps: 2
+    }
+};
+
+reactor ReactorWithAlarm {
+    
+    input in:int;
+    output out:int;
+
+    logical action setAlarm(2 sec);
+
+    //@label Computation
+    reaction(in) -> out, setAlarm {=
+        // If certain abnormal state occurs,
+        // trigger the alarm.
+        if (true) {
+            schedule(setAlarm, 0);
+            return;
+        }
+        // Otherwise, perform computation and
+        // output the value normally.
+        SET(out, 1);
+    =}
+
+    //@label If fault occurs, trigger the alarm after 2 secs.
+    reaction(setAlarm) {=
+        // Trigger the alarm
+    =}
+}
+
+main reactor {
+    r =  new ReactorWithAlarm();
+}
