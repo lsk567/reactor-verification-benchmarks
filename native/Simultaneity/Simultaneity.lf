@@ -2,16 +2,19 @@ target C {
     verification: {
         engine: uclid,
         tactic: induction,
-        steps:  9
-    }
+        steps:  10
+    },
+    no-compile: true
 };
 
+@inv(true ==> [out1 == ((inn + 1) * (2 + 3) / 4) /\ out2 == 2])
+@inv(false ==> true)
 reactor Source {
     input in:int;
     output out1:int;
     output out2:int;
 
-    // @post out1 == 1 && out2 == 2
+    @inv(out1 == 1 /\ out2 == 2)
     reaction(in) -> out1, out2 {=
         SET(out1, 1);
         SET(out2, 2);
@@ -87,6 +90,7 @@ reactor Sink {
 // (rxn == in1 || rxn == in2) ==> t == msec(1)
 //
 // We also need to assume that t_in (at Source) starts at (0,0).
+// @property("")
 main reactor {
     source = new Source();
     sink = new Sink();

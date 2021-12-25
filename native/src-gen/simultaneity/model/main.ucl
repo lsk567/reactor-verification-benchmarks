@@ -81,44 +81,44 @@ module main {
     // Application Specific
     // Reaction ids
     type rxn_t = enum {
-        simultaneity_source_reaction_0,
-        simultaneity_sink_reaction_0,
-        simultaneity_a_reaction_1,
-        simultaneity_sink_reaction_1,
-        simultaneity_b_reaction_1,
-        simultaneity_a_reaction_0,
-        simultaneity_b_reaction_0,
+        Simultaneity_source_reaction_0,
+        Simultaneity_sink_reaction_0,
+        Simultaneity_a_reaction_1,
+        Simultaneity_sink_reaction_1,
+        Simultaneity_b_reaction_1,
+        Simultaneity_a_reaction_0,
+        Simultaneity_b_reaction_0,
         NULL
     };
     type state_t = {
-        integer, 	// simultaneity.sink.s1
-        integer, 	// simultaneity.sink.s2
-        integer, 	// simultaneity.a.s
-        integer, 	// simultaneity.b.s
-        integer, 	// simultaneity.a.out
-        integer, 	// simultaneity.sink.in1
-        integer, 	// simultaneity.b.out
-        integer, 	// simultaneity.source.out1
-        integer, 	// simultaneity.a.in
-        integer, 	// simultaneity.source.in
-        integer, 	// simultaneity.b.in
-        integer, 	// simultaneity.source.out2
-        integer 	// simultaneity.sink.in2
+        integer, 	// Simultaneity.sink.s1
+        integer, 	// Simultaneity.sink.s2
+        integer, 	// Simultaneity.a.s
+        integer, 	// Simultaneity.b.s
+        integer, 	// Simultaneity.b.out
+        integer, 	// Simultaneity.a.in
+        integer, 	// Simultaneity.source.in
+        integer, 	// Simultaneity.source.out1
+        integer, 	// Simultaneity.sink.in1
+        integer, 	// Simultaneity.a.out
+        integer, 	// Simultaneity.source.out2
+        integer, 	// Simultaneity.sink.in2
+        integer 	// Simultaneity.b.in
     };
     // State variable projection macros
-    define simultaneity_sink_s1(s : state_t) : integer = s._1;
-    define simultaneity_sink_s2(s : state_t) : integer = s._2;
-    define simultaneity_a_s(s : state_t) : integer = s._3;
-    define simultaneity_b_s(s : state_t) : integer = s._4;
-    define simultaneity_a_out(s : state_t) : integer = s._5;
-    define simultaneity_sink_in1(s : state_t) : integer = s._6;
-    define simultaneity_b_out(s : state_t) : integer = s._7;
-    define simultaneity_source_out1(s : state_t) : integer = s._8;
-    define simultaneity_a_in(s : state_t) : integer = s._9;
-    define simultaneity_source_in(s : state_t) : integer = s._10;
-    define simultaneity_b_in(s : state_t) : integer = s._11;
-    define simultaneity_source_out2(s : state_t) : integer = s._12;
-    define simultaneity_sink_in2(s : state_t) : integer = s._13;
+    define Simultaneity_sink_s1(s : state_t) : integer = s._1;
+    define Simultaneity_sink_s2(s : state_t) : integer = s._2;
+    define Simultaneity_a_s(s : state_t) : integer = s._3;
+    define Simultaneity_b_s(s : state_t) : integer = s._4;
+    define Simultaneity_b_out(s : state_t) : integer = s._5;
+    define Simultaneity_a_in(s : state_t) : integer = s._6;
+    define Simultaneity_source_in(s : state_t) : integer = s._7;
+    define Simultaneity_source_out1(s : state_t) : integer = s._8;
+    define Simultaneity_sink_in1(s : state_t) : integer = s._9;
+    define Simultaneity_a_out(s : state_t) : integer = s._10;
+    define Simultaneity_source_out2(s : state_t) : integer = s._11;
+    define Simultaneity_sink_in2(s : state_t) : integer = s._12;
+    define Simultaneity_b_in(s : state_t) : integer = s._13;
     
     //////////////////////////
     
@@ -126,7 +126,7 @@ module main {
     * Trace Definition *
     *******************/
     const START : integer = 0;
-    const END : integer = 9;
+    const END : integer = 10;
     
     define in_range(num : integer) : boolean
     = num >= START && num <= END;
@@ -134,7 +134,7 @@ module main {
     type step_t = integer;
     type event_t = { rxn_t, tag_t, state_t };
     
-    // Generate 10 events for 9-induction.
+    // Generate 10 events.
     type trace_t = {
         event_t,
         event_t,
@@ -185,12 +185,12 @@ module main {
     ***************************/
     // Delay macro
     define delay(r1, r2 : rxn_t) : interval_t =
-        if (r1 == simultaneity_a_reaction_0 && r2 == simultaneity_a_reaction_1) then nsec(1) else (
-        if (r1 == simultaneity_a_reaction_1 && r2 == simultaneity_sink_reaction_0) then nsec(0) else (
-        if (r1 == simultaneity_b_reaction_0 && r2 == simultaneity_b_reaction_1) then nsec(1000000) else (
-        if (r1 == simultaneity_b_reaction_1 && r2 == simultaneity_sink_reaction_1) then nsec(0) else (
-        if (r1 == simultaneity_source_reaction_0 && r2 == simultaneity_a_reaction_0) then nsec(0) else (
-        if (r1 == simultaneity_source_reaction_0 && r2 == simultaneity_b_reaction_0) then nsec(0) else (
+        if (r1 == Simultaneity_b_reaction_1 && r2 == Simultaneity_sink_reaction_1) then nsec(0) else (
+        if (r1 == Simultaneity_a_reaction_0 && r2 == Simultaneity_a_reaction_1) then nsec(1) else (
+        if (r1 == Simultaneity_b_reaction_0 && r2 == Simultaneity_b_reaction_1) then nsec(1000000) else (
+        if (r1 == Simultaneity_source_reaction_0 && r2 == Simultaneity_b_reaction_0) then nsec(0) else (
+        if (r1 == Simultaneity_source_reaction_0 && r2 == Simultaneity_a_reaction_0) then nsec(0) else (
+        if (r1 == Simultaneity_a_reaction_1 && r2 == Simultaneity_sink_reaction_0) then nsec(0) else (
         inf()
         ))))));
     
@@ -198,12 +198,12 @@ module main {
     define hb(e1, e2 : event_t) : boolean
     = tag_earlier(e1._2, e2._2)
             || (tag_same(e1._2, e2._2) && (
-            (e1._1 == simultaneity_a_reaction_0 && e2._1 == simultaneity_a_reaction_1)
-            || (e1._1 == simultaneity_a_reaction_1 && e2._1 == simultaneity_sink_reaction_0)
-            || (e1._1 == simultaneity_b_reaction_0 && e2._1 == simultaneity_b_reaction_1)
-            || (e1._1 == simultaneity_b_reaction_1 && e2._1 == simultaneity_sink_reaction_1)
-            || (e1._1 == simultaneity_source_reaction_0 && e2._1 == simultaneity_a_reaction_0)
-            || (e1._1 == simultaneity_source_reaction_0 && e2._1 == simultaneity_b_reaction_0)
+            (e1._1 == Simultaneity_b_reaction_1 && e2._1 == Simultaneity_sink_reaction_1)
+            || (e1._1 == Simultaneity_a_reaction_0 && e2._1 == Simultaneity_a_reaction_1)
+            || (e1._1 == Simultaneity_b_reaction_0 && e2._1 == Simultaneity_b_reaction_1)
+            || (e1._1 == Simultaneity_source_reaction_0 && e2._1 == Simultaneity_b_reaction_0)
+            || (e1._1 == Simultaneity_source_reaction_0 && e2._1 == Simultaneity_a_reaction_0)
+            || (e1._1 == Simultaneity_a_reaction_1 && e2._1 == Simultaneity_sink_reaction_0)
             ));
     
     define startup_triggers(n : rxn_t) : boolean
@@ -211,6 +211,7 @@ module main {
         ((start == 0) ==> (exists (i : integer) :: in_range(i)
             && rxn(i) == n && tag_same(g(i), zero())))
         // Can ONLY be triggered at (0,0).
+        // FIXME: this case seems to be taken care of by an axiom below.
         && !(exists (j : integer) :: in_range(j) && rxn(j) == n
             && !tag_same(g(j), zero()));
     
@@ -261,61 +262,61 @@ module main {
     * Connections *
     ***************/
     
-    // simultaneity_a_out -> simultaneity_sink_in1 
+    // Simultaneity_b_out -> Simultaneity_sink_in2 
     axiom(forall (i : integer) :: (i >= START && i <= END)
         ==> (
-            (rxn(i) == simultaneity_a_reaction_1 ==> simultaneity_sink_in1(s(i)) == simultaneity_a_out(s(i)))
-            && (rxn(i) != simultaneity_a_reaction_1 ==> simultaneity_sink_in1(s(i)) == simultaneity_sink_in1(s(i - 1)))
+            (rxn(i) == Simultaneity_b_reaction_1 ==> Simultaneity_sink_in2(s(i)) == Simultaneity_b_out(s(i)))
+            && (rxn(i) != Simultaneity_b_reaction_1 ==> Simultaneity_sink_in2(s(i)) == Simultaneity_sink_in2(s(i - 1)))
         ));
     
-    // simultaneity_b_out -> simultaneity_sink_in2 
+    // Simultaneity_source_out2 -> Simultaneity_b_in 
     axiom(forall (i : integer) :: (i >= START && i <= END)
         ==> (
-            (rxn(i) == simultaneity_b_reaction_1 ==> simultaneity_sink_in2(s(i)) == simultaneity_b_out(s(i)))
-            && (rxn(i) != simultaneity_b_reaction_1 ==> simultaneity_sink_in2(s(i)) == simultaneity_sink_in2(s(i - 1)))
+            (rxn(i) == Simultaneity_source_reaction_0 ==> Simultaneity_b_in(s(i)) == Simultaneity_source_out2(s(i)))
+            && (rxn(i) != Simultaneity_source_reaction_0 ==> Simultaneity_b_in(s(i)) == Simultaneity_b_in(s(i - 1)))
         ));
     
-    // simultaneity_source_out1 -> simultaneity_a_in 
+    // Simultaneity_source_out1 -> Simultaneity_a_in 
     axiom(forall (i : integer) :: (i >= START && i <= END)
         ==> (
-            (rxn(i) == simultaneity_source_reaction_0 ==> simultaneity_a_in(s(i)) == simultaneity_source_out1(s(i)))
-            && (rxn(i) != simultaneity_source_reaction_0 ==> simultaneity_a_in(s(i)) == simultaneity_a_in(s(i - 1)))
+            (rxn(i) == Simultaneity_source_reaction_0 ==> Simultaneity_a_in(s(i)) == Simultaneity_source_out1(s(i)))
+            && (rxn(i) != Simultaneity_source_reaction_0 ==> Simultaneity_a_in(s(i)) == Simultaneity_a_in(s(i - 1)))
         ));
     
-    // simultaneity_source_out2 -> simultaneity_b_in 
+    // Simultaneity_a_out -> Simultaneity_sink_in1 
     axiom(forall (i : integer) :: (i >= START && i <= END)
         ==> (
-            (rxn(i) == simultaneity_source_reaction_0 ==> simultaneity_b_in(s(i)) == simultaneity_source_out2(s(i)))
-            && (rxn(i) != simultaneity_source_reaction_0 ==> simultaneity_b_in(s(i)) == simultaneity_b_in(s(i - 1)))
+            (rxn(i) == Simultaneity_a_reaction_1 ==> Simultaneity_sink_in1(s(i)) == Simultaneity_a_out(s(i)))
+            && (rxn(i) != Simultaneity_a_reaction_1 ==> Simultaneity_sink_in1(s(i)) == Simultaneity_sink_in1(s(i - 1)))
         ));
     
     /********************
     * Program Topology *
     ********************/         
     
-    // simultaneity.a.reaction_0 triggers simultaneity.a.reaction_1 via a logical action.
-    axiom(triggers_via_logical_action(simultaneity_a_reaction_0, simultaneity_a_reaction_1,
-        delay(simultaneity_a_reaction_0, simultaneity_a_reaction_1)));
+    // Simultaneity.b.reaction_1 triggers Simultaneity.sink.reaction_1 via a logical connection.
+    axiom(triggers_via_logical_connection(Simultaneity_b_reaction_1, Simultaneity_sink_reaction_1,
+        delay(Simultaneity_b_reaction_1, Simultaneity_sink_reaction_1)));
     
-    // simultaneity.a.reaction_1 triggers simultaneity.sink.reaction_0 via a logical connection.
-    axiom(triggers_via_logical_connection(simultaneity_a_reaction_1, simultaneity_sink_reaction_0,
-        delay(simultaneity_a_reaction_1, simultaneity_sink_reaction_0)));
+    // Simultaneity.a.reaction_0 triggers Simultaneity.a.reaction_1 via a logical action.
+    axiom(triggers_via_logical_action(Simultaneity_a_reaction_0, Simultaneity_a_reaction_1,
+        delay(Simultaneity_a_reaction_0, Simultaneity_a_reaction_1)));
     
-    // simultaneity.b.reaction_0 triggers simultaneity.b.reaction_1 via a logical action.
-    axiom(triggers_via_logical_action(simultaneity_b_reaction_0, simultaneity_b_reaction_1,
-        delay(simultaneity_b_reaction_0, simultaneity_b_reaction_1)));
+    // Simultaneity.b.reaction_0 triggers Simultaneity.b.reaction_1 via a logical action.
+    axiom(triggers_via_logical_action(Simultaneity_b_reaction_0, Simultaneity_b_reaction_1,
+        delay(Simultaneity_b_reaction_0, Simultaneity_b_reaction_1)));
     
-    // simultaneity.b.reaction_1 triggers simultaneity.sink.reaction_1 via a logical connection.
-    axiom(triggers_via_logical_connection(simultaneity_b_reaction_1, simultaneity_sink_reaction_1,
-        delay(simultaneity_b_reaction_1, simultaneity_sink_reaction_1)));
+    // Simultaneity.source.reaction_0 triggers Simultaneity.b.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(Simultaneity_source_reaction_0, Simultaneity_b_reaction_0,
+        delay(Simultaneity_source_reaction_0, Simultaneity_b_reaction_0)));
     
-    // simultaneity.source.reaction_0 triggers simultaneity.a.reaction_0 via a logical connection.
-    axiom(triggers_via_logical_connection(simultaneity_source_reaction_0, simultaneity_a_reaction_0,
-        delay(simultaneity_source_reaction_0, simultaneity_a_reaction_0)));
+    // Simultaneity.source.reaction_0 triggers Simultaneity.a.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(Simultaneity_source_reaction_0, Simultaneity_a_reaction_0,
+        delay(Simultaneity_source_reaction_0, Simultaneity_a_reaction_0)));
     
-    // simultaneity.source.reaction_0 triggers simultaneity.b.reaction_0 via a logical connection.
-    axiom(triggers_via_logical_connection(simultaneity_source_reaction_0, simultaneity_b_reaction_0,
-        delay(simultaneity_source_reaction_0, simultaneity_b_reaction_0)));
+    // Simultaneity.a.reaction_1 triggers Simultaneity.sink.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(Simultaneity_a_reaction_1, Simultaneity_sink_reaction_0,
+        delay(Simultaneity_a_reaction_1, Simultaneity_sink_reaction_0)));
     
     /*********************
      * Initial Condition *
@@ -325,66 +326,69 @@ module main {
     = start == 0
         && rxn(0) == NULL
         && g(0) == {0, 0}
-        && simultaneity_sink_s1(s(0)) == 0
-        && simultaneity_sink_s2(s(0)) == 0
-        && simultaneity_a_s(s(0)) == 0
-        && simultaneity_b_s(s(0)) == 0
-        && simultaneity_a_out(s(0)) == 0
-        && simultaneity_sink_in1(s(0)) == 0
-        && simultaneity_b_out(s(0)) == 0
-        && simultaneity_source_out1(s(0)) == 0
-        && simultaneity_a_in(s(0)) == 0
-        && simultaneity_source_in(s(0)) == 0
-        && simultaneity_b_in(s(0)) == 0
-        && simultaneity_source_out2(s(0)) == 0
-        && simultaneity_sink_in2(s(0)) == 0
+        && Simultaneity_sink_s1(s(0)) == 0
+        && Simultaneity_sink_s2(s(0)) == 0
+        && Simultaneity_a_s(s(0)) == 0
+        && Simultaneity_b_s(s(0)) == 0
+        && Simultaneity_b_out(s(0)) == 0
+        && Simultaneity_a_in(s(0)) == 0
+        && Simultaneity_source_in(s(0)) == 0
+        && Simultaneity_source_out1(s(0)) == 0
+        && Simultaneity_sink_in1(s(0)) == 0
+        && Simultaneity_a_out(s(0)) == 0
+        && Simultaneity_source_out2(s(0)) == 0
+        && Simultaneity_sink_in2(s(0)) == 0
+        && Simultaneity_b_in(s(0)) == 0
         ;
         
+    /*********************
+    * Reactor Contracts *
+    *********************/
+    
     /**********************
     * Reaction Contracts *
     **********************/
     
-    /* Pre/post conditions for simultaneity.source.reaction_0 */
+    /* Pre/post conditions for Simultaneity.source.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_source_reaction_0 ==> (
-            simultaneity_source_out1(s(i)) == 1
-            && simultaneity_source_out2(s(i)) == 2
+        (rxn(i) == Simultaneity_source_reaction_0 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
-    /* Pre/post conditions for simultaneity.sink.reaction_0 */
+    /* Pre/post conditions for Simultaneity.sink.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_sink_reaction_0 ==> (
-            simultaneity_sink_s1(s(i)) == simultaneity_sink_in1(s(i))
+        (rxn(i) == Simultaneity_sink_reaction_0 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
-    /* Pre/post conditions for simultaneity.a.reaction_1 */
+    /* Pre/post conditions for Simultaneity.a.reaction_1 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_a_reaction_1 ==> (
-            simultaneity_a_out(s(i)) == simultaneity_a_s(s(i))
+        (rxn(i) == Simultaneity_a_reaction_1 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
-    /* Pre/post conditions for simultaneity.sink.reaction_1 */
+    /* Pre/post conditions for Simultaneity.sink.reaction_1 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_sink_reaction_1 ==> (
-            simultaneity_sink_s2(s(i)) == simultaneity_sink_in2(s(i))
+        (rxn(i) == Simultaneity_sink_reaction_1 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
-    /* Pre/post conditions for simultaneity.b.reaction_1 */
+    /* Pre/post conditions for Simultaneity.b.reaction_1 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_b_reaction_1 ==> (
-            simultaneity_b_out(s(i)) == simultaneity_b_s(s(i))
+        (rxn(i) == Simultaneity_b_reaction_1 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
-    /* Pre/post conditions for simultaneity.a.reaction_0 */
+    /* Pre/post conditions for Simultaneity.a.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_a_reaction_0 ==> (
-            simultaneity_a_s(s(i)) == simultaneity_a_in(s(i))
+        (rxn(i) == Simultaneity_a_reaction_0 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
-    /* Pre/post conditions for simultaneity.b.reaction_0 */
+    /* Pre/post conditions for Simultaneity.b.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == simultaneity_b_reaction_0 ==> (
-            simultaneity_b_s(s(i)) == simultaneity_b_in(s(i))
+        (rxn(i) == Simultaneity_b_reaction_0 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
     )));
     
     /**************
@@ -392,27 +396,9 @@ module main {
     **************/
     
     // [placeholder] Add user-defined properties here.
-    //
-    // FIXME: revise.
-    // Property: given a reaction == source_reaction_0 at t,
-    // sink_reaction_0 and sink_reaction_1 should be
-    // triggered at t + 1 msec.
     define inv(i : step_t) : boolean =
-        (rxn(i) == simultaneity_sink_reaction_0
-            ==> (
-                exists (j : integer) :: j < i
-                    && rxn(j) == simultaneity_source_reaction_0
-                    && g(i) == tag_schedule(g(j), msec(1))
-            )
-        )
-        && (rxn(i) == simultaneity_sink_reaction_1
-            ==> (
-                exists (j : integer) :: j < i
-                    && rxn(j) == simultaneity_source_reaction_0
-                    && g(i) == tag_schedule(g(j), msec(1))
-            )
-        );
-
+        true;   // TODO: replace
+    
     // Auxiliary invariant
     define auxiliary_invariant(i : integer) : boolean =
         true;   // TODO: replace
@@ -423,21 +409,15 @@ module main {
     ***************/
     // initialization
     property initialization : initial_condition() ==>
-        (forall (i : integer) ::
-            (i >= START && i <= END)
-                ==> (
-                    inv(i)
-                    && auxiliary_invariant(i)
-                ));
+        true; // TODO: replace this with a general temporal logic property.
     
     // Note: state 0 needs to be unconstrained.
     // consecution
-    property consecution : (forall (i : integer) ::
-        (i >= START && i < END) ==> (inv(i) && auxiliary_invariant(i)))
-            ==> (inv(END) && auxiliary_invariant(END));
+    property consecution : 
+        true; // TODO: replace this with a general temporal logic property.
     
     control {
-        v = unroll(0);
+        v = bmc(0);
         check;
         print_results;
         v.print_cex;

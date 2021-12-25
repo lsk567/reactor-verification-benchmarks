@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(simultaneity LANGUAGES C)
+project(Simultaneity LANGUAGES C)
 
 # Require C11
 set(CMAKE_C_STANDARD 11)
@@ -33,9 +33,9 @@ include_directories(${CoreLib})
 include_directories(${CoreLib}/platform)
 include_directories(${CoreLib}/federated)
 
-set(LF_MAIN_TARGET simultaneity)
+set(LF_MAIN_TARGET Simultaneity)
 # Declare a new executable target and list all its sources
-add_executable( ${LF_MAIN_TARGET} simultaneity.c ${LF_PLATFORM_FILE} ctarget.c)
+add_executable( ${LF_MAIN_TARGET} Simultaneity.c ${LF_PLATFORM_FILE} ctarget.c)
 
 
 install(TARGETS ${LF_MAIN_TARGET}
