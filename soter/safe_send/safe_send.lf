@@ -1,0 +1,74 @@
+/**
+ %%  Description:
+ %%
+ %%     This example is similar to `parikh` but requires
+ %%     a more precise data abstraction to prove it safe
+ %%     (i.e. Data_1 instead of Data_0, through the switch `-D 1`).
+ %%
+ */
+
+target C;
+
+// FIXME: Currently cannot generate model for this program.
+//        because upstream and downstream are linked by a port.
+// target C {
+//     verification: {
+//         engine: uclid,
+//         tactic: induction,
+//         steps: 9
+//     }
+// };
+
+reactor Server {
+    
+    input  in : string;
+    output out: string;
+
+    logical action err: string;
+
+    // Check if a string buffer is a valid request.
+    preamble {=
+        bool isValid(char *s) {
+            if (strcmp(s, "Invalid") == 0) {
+                return false;
+            }
+            return true;
+        }
+    =}
+
+    /**
+     * If the input is invalid, trigger the error handler.
+     * Otherwise, send a response back.
+     */
+    reaction(in) -> out, err {=
+        if (!isValid(in->value)) {
+            // The following copies the char*, not the string.
+            schedule_copy(err, 0, &(in->value), 1);
+        }
+        else {
+            // LF defines "string" type.
+            string res = "response";
+            SET(out, res);
+        }
+    =}
+
+    // Error handling logic.
+    reaction(err) {=
+        printf("Handling error when processing \"%s\".\n", err->value);
+    =}
+}
+
+main reactor {
+
+    s = new Server();
+
+    reaction(startup) -> s.in {=
+        // Sends an invalid query
+        string req = "Valid";
+        SET(s.in, req);
+    =}
+
+    reaction(s.out) {=
+        printf("Successfully received server output: \"%s\".\n", s.out->value);
+    =}
+}
