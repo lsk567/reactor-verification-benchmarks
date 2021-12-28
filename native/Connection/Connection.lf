@@ -1,0 +1,29 @@
+target C {
+    verification: {
+        engine: uclid,
+        steps: 10
+    }
+}
+
+reactor Source {
+    output out:int;
+
+    reaction(startup) -> out {=
+    
+    =}
+}
+
+reactor Sink {
+    input in:int;
+
+    reaction(in) {=
+    
+    =}
+}
+
+main reactor {
+    source = new Source();
+    sink = new Sink();
+
+    source.out -> sink.in after 10 ms;
+}
