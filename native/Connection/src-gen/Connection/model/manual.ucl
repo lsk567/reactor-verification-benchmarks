@@ -290,6 +290,10 @@ module main {
     // [placeholder] Add user-defined properties here.
     // When Connection_source_reaction_0 fires and triggers Connection_sink_reaction_0,
     // Connection_sink_reaction_0 should be triggered within 2 seconds.
+    // MTL : (rxn == Connection_source_reaction_0) 
+    //           ==> F_[0, 2 sec] rxn == Connection_sink_reaction_0 
+    // Assume the bound is b, which has implications on the # of events at runtime to
+    // guarantee soundness.
     define P(i : step_t) : boolean =
         (rxn(i) == Connection_source_reaction_0)
             ==> (forall (j : integer) :: (j > i && j <= i + (b-1)
@@ -315,7 +319,7 @@ module main {
      * Induction *
      *************/
     // initialization
-    // M |= ALWAYS[0, N] Q
+    // ForSpec: M |= ALWAYS[0, N] Q
     // Since b = 2 and |tr| = 10, the effective trace length is 9
     // since we need to reserve one slot for consecution.
     // N thus must be <= 6 for initialization.
