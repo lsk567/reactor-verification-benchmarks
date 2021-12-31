@@ -7,17 +7,26 @@
  %%
  */
 
-target C;
+/**
+ * (Original) Description:
+ * This example illustrates the "Verify Absence-of-Errors" mode.
+ * The server expects a tuple `{REQUEST,PID-OF-SENDER}`
+ * but the main sends to it an atom instead of its pid, then
+ * generating an exception when the server tries to send back
+ * a response to what he assumes to be a pid.
+ *
+ * The verification step discovers a *genuine* counter-example.
+ * To inspect the error trace run bfc on the generated model
+ * and look at the trace alongside the dot model of the ACS.
+ */
 
-// FIXME: Currently cannot generate model for this program.
-//        because upstream and downstream are linked by a port.
-// target C {
-//     verification: {
-//         engine: uclid,
-//         tactic: induction,
-//         steps: 9
-//     }
-// };
+target C {
+    verification: {
+        engine: uclid,
+        tactic: induction,
+        steps: 6
+    }
+};
 
 reactor Server {
     
@@ -40,6 +49,9 @@ reactor Server {
      * If the input is invalid, trigger the error handler.
      * Otherwise, send a response back.
      */
+    // MTL: ((in < 0) ==> (F_[1 mstep](rxn == s.reaction_1) /\ !F_[0](rxn == reaction_1)))
+    //          && ((in >= 0) ==> (out == 1 /\ !F_[1 mstep](rxn == s.reaction_1) /\ F_[0](rxn == reaction_1))) 
+    @inv("( (safe_send_s_in(s(i)) < 0) ==> ( (safe_send_s_out(s(i)) == safe_send_s_out(s(i-1))) && (exists (j : integer) :: j > i && j <= END && rxn(j) == safe_send_s_reaction_1 && g(j) == tag_schedule(g(i), zero())) && !(exists (j : integer) :: j > i && j <= END && rxn(j) == safe_send_reaction_1 && g(j) == g(i)) ) ) && ( (safe_send_s_in(s(i)) >= 0) ==> ( (safe_send_s_out(s(i)) == 1) && !(exists (j : integer) :: j > i && j <= END && rxn(j) == safe_send_s_reaction_1 && g(j) == tag_schedule(g(i), zero())) && (exists (j : integer) :: j > i && j <= END && rxn(j) == safe_send_reaction_1 && g(j) == g(i)) ) )")
     reaction(in) -> out, err {=
         if (!isValid(in->value)) {
             // The following copies the char*, not the string.
@@ -58,10 +70,16 @@ reactor Server {
     =}
 }
 
+// MTL: F(rxn == reaction_1)
+@property("exists (j : integer) :: j > i && j <= END && rxn(j) == safe_send_reaction_1", 4)
 main reactor {
 
     s = new Server();
 
+    // MTL: in < 0 AND F(rxn == s.reaction_0)
+    // FIXME: Instead of specifying some downstream reaction must be triggered.
+    //        We should specify that some port value is present or absent.
+    @inv("safe_send_s_in(s(i)) >= 0 && ( exists (j : integer) :: j > i && j <= END && rxn(j) == safe_send_s_reaction_0 && g(j) == g(i) )")
     reaction(startup) -> s.in {=
         // Sends an invalid query
         string req = "Valid";

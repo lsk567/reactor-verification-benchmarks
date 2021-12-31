@@ -10,6 +10,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "../CMakeLists.txt"
   "CMakeFiles/3.19.3/CMakeCCompiler.cmake"
   "CMakeFiles/3.19.3/CMakeSystem.cmake"
+  "../core/platform/Platform.cmake"
   "/opt/local/share/cmake-3.19/Modules/CMakeCCompiler.cmake.in"
   "/opt/local/share/cmake-3.19/Modules/CMakeCCompilerABI.c"
   "/opt/local/share/cmake-3.19/Modules/CMakeCInformation.cmake"
