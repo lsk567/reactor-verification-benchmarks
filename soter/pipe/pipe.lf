@@ -13,7 +13,7 @@
 target C {
     verification: {
         engine: uclid,
-        steps: 6
+        steps: 7
     }
 };
 
@@ -157,7 +157,8 @@ reactor Node5 {
 // FIXME: Not passing since the consecution step assume state is initially 1. How to fix this?
 // Also make sure to add grammar to express "produces output."
 // Also make sure the default behavior for NULL is not outputting value.
-@property("(pipe_node_1_count(s(i)) <= 1 && true && pipe_node_1_count(s(i)) >= 0)", 4)
+// Also make sure for consecution step, we should disable NULL in the first state, otherwise 1-induction sometimes does not work. See the example if you make steps 6.
+@property("(pipe_node_1_count(s(i)) <= 1 && true && pipe_node_1_count(s(i)) >= 0 && (rxn(i) == pipe_reaction_0 ==> pipe_node_1_count(s(i)) == 0))", 4)
 main reactor {
     
     node_1 = new Node1();

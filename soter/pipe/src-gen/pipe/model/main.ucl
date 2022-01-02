@@ -107,7 +107,7 @@ module main {
      * Trace Definition *
      *******************/
     const START : integer = 0;
-    const END : integer = 5;
+    const END : integer = 6;
     
     define in_range(num : integer) : boolean
     = num >= START && num <= END;
@@ -115,8 +115,9 @@ module main {
     type step_t = integer;
     type event_t = { rxn_t, tag_t, state_t };
     
-    // Generate 6 events.
+    // Generate 7 events.
     type trace_t = {
+        event_t,
         event_t,
         event_t,
         event_t,
@@ -142,7 +143,8 @@ module main {
     if (i == 3) then tr._4 else (
     if (i == 4) then tr._5 else (
     if (i == 5) then tr._6 else (
-    { NULL, inf(), { 0, 0, 0, 0, 0 } } ))))));
+    if (i == 6) then tr._7 else (
+    { NULL, inf(), { 0, 0, 0, 0, 0 } } )))))));
     
     define elem(i : step_t) : event_t
     = get(trace, i);
@@ -345,7 +347,7 @@ module main {
     * Reaction Contracts *
     **********************/
     
-    //// Line 171 in the LF program
+    //// Line 174 in the LF program
     /* Pre/post conditions for pipe.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
         (rxn(i) == pipe_reaction_0 ==> (
@@ -387,7 +389,7 @@ module main {
     
     // The FOL property translated from user-defined MTL property
     define P(i : step_t) : boolean =
-        (pipe_node_1_count(s(i)) <= 1 && true && pipe_node_1_count(s(i)) >= 0);
+        !(pipe_node_1_count(s(i)) <= 1 && true && pipe_node_1_count(s(i)) >= 0 && (rxn(i) == pipe_reaction_0 ==> pipe_node_1_count(s(i)) == 0));
     
     // Auxiliary invariant
     define aux_inv(i : integer) : boolean =
