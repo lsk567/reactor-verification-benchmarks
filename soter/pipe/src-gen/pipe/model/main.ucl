@@ -1,0 +1,429 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // Tag algebra
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && pi1(i) == 0 && !isInf(i))
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+            then { pi1(t) + pi1(i), 0 }
+            else inf());
+    
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        pipe_reaction_0,
+        pipe_reaction_1,
+        pipe_node_1_reaction_1,
+        pipe_node_1_reaction_0,
+        NULL
+    };
+    type state_t = {
+        integer, 	// pipe.value
+        integer, 	// pipe.node_1.count
+        integer, 	// pipe.node_1.payload
+        integer, 	// pipe.node_1.out
+        integer 	// pipe.node_1.in
+    };
+    // State variable projection macros
+    define pipe_value(s : state_t) : integer = s._1;
+    define pipe_node_1_count(s : state_t) : integer = s._2;
+    define pipe_node_1_payload(s : state_t) : integer = s._3;
+    define pipe_node_1_out(s : state_t) : integer = s._4;
+    define pipe_node_1_in(s : state_t) : integer = s._5;
+    
+    //////////////////////////
+    
+    /********************
+     * Trace Definition *
+     *******************/
+    const START : integer = 0;
+    const END : integer = 5;
+    
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t };
+    
+    // Generate 6 events.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * Helper Macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    if (i == 3) then tr._4 else (
+    if (i == 4) then tr._5 else (
+    if (i == 5) then tr._6 else (
+    { NULL, inf(), { 0, 0, 0, 0, 0 } } ))))));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t    = elem(i)._1;
+    define g        (i : step_t) : tag_t    = elem(i)._2;
+    define s        (i : step_t) : state_t  = elem(i)._3;
+    define isNULL   (i : step_t) : boolean  = rxn(i) == NULL;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Delay macro
+    define delay(r1, r2 : rxn_t) : interval_t =
+        if (r1 == pipe_node_1_reaction_0 && r2 == pipe_node_1_reaction_1) then nsec(0) else (
+        if (r1 == pipe_reaction_0 && r2 == pipe_node_1_reaction_0) then nsec(0) else (
+        if (r1 == pipe_node_1_reaction_1 && r2 == pipe_reaction_1) then nsec(0) else (
+        inf()
+        )));
+    
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            || (tag_same(e1._2, e2._2) && (
+            (e1._1 == pipe_node_1_reaction_0 && e2._1 == pipe_node_1_reaction_1)
+            || (e1._1 == pipe_reaction_0 && e2._1 == pipe_node_1_reaction_0)
+            || (e1._1 == pipe_node_1_reaction_1 && e2._1 == pipe_reaction_1)
+            ));
+    
+    define startup_triggers(n : rxn_t) : boolean
+    = // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (exists (i : integer) :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())))
+        // Can ONLY be triggered at (0,0).
+        // FIXME: this case seems to be taken care of by an axiom below.
+        && !(exists (j : integer) :: in_range(j) && rxn(j) == n
+            && !tag_same(g(j), zero()));
+    
+    // Note: The current formulation of "triggers" precludes
+    //       partial reaction triggering chain.
+    // This includes the possibility that upstream does NOT output.
+    define triggers_via_logical_action
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_schedule(g(j), delay)));
+    
+    define triggers_via_logical_connection
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_delay(g(j), delay)));
+    
+    //// Encoding the behavior of timers
+    define is_multiple_of(a, b : integer) : boolean
+    = exists (c : integer) :: b * c == a;
+    
+    define is_closest_starting_point(t : tag_t, period, offset : integer) : boolean
+    = (exists (c : integer) :: (period * c) + offset == pi1(t)
+        // Tick at the next valid instant.
+        && (period * (c - 1) + offset) < start)     
+        // Timer always has mstep of 0.
+        && pi2(t) == 0;
+    
+    // Can directly use index as HB since this only applies to events
+    // on the same federate.
+    define is_latest_invocation_in_same_fed_wrt(a, b : integer) : boolean
+    = !(exists (c : integer) :: in_range(c)
+        && rxn(c) == rxn(a) && a < c && c < b);
+    
+    define timer_triggers(_rxn : rxn_t, offset, period : integer) : boolean =
+        // 1. If the initial event is within frame, show it.
+        (exists (i : integer) :: in_range(i)
+        && rxn(i) == _rxn
+        && is_closest_starting_point(g(i), period, offset))
+        // 2. The SPACING between two consecutive timer firings is the period.
+        // FIXME: Is the use of two in_range() here appropriate?
+        // Shaokai: Seems so to me, since the first state is not actually constrained.
+        && (forall (i, j : integer) :: (in_range(i) && in_range(j) && i < j
+            && rxn(i) == _rxn && rxn(j) == _rxn
+            // ...and there does not exist a 3rd invocation in between
+            && !(exists (k : integer) :: rxn(k) == _rxn && i < k && k < j))
+                ==> g(j) == tag_schedule(g(i), {period, 0}))
+        // 3. There does not exist other events in the same federate that 
+        // differ by the last timer invocation by g(last_timer) + period.
+        // In other words, this axiom ensures a timer fires when it needs to.
+        //
+        // a := index of the offending event that occupy the spot of a timer tick.
+        // b := index of non-timer event on the same federate
+        // both in_range's are needed due to !(exists), which turns into a forall.
+        && !(exists (b, a : integer) :: in_range(a) && in_range(b)
+            && rxn(b) != _rxn
+            // && _id_same_fed(elem(b), {_id, zero()})
+            && rxn(a) == _rxn
+            && (is_latest_invocation_in_same_fed_wrt(a, b)
+                && tag_later(g(b), tag_schedule(g(a), {period, 0}))));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j))));
+    
+    // Tags should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    // Begin the frame at the start time specified.
+    define start_frame(i : step_t) : boolean =
+        (tag_same(g(i), {start, 0}) || tag_later(g(i), {start, 0}));
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> start_frame(i));
+    
+    // NULL events should appear in the suffix, except for START.
+    axiom(forall (j : integer) :: (j > START && j <= END) ==> (
+        (rxn(j)) != NULL) ==> 
+            (forall (i : integer) :: (i > START && i < j) ==> (rxn(i) != NULL)));
+    
+    // When a NULL event occurs, the state stays the same.
+    axiom(forall (j : integer) :: (j > START && j <= END) ==> (
+        (rxn(j) == NULL) ==> (s(j) == s(j-1))
+    ));
+    
+    /***************
+    * Connections *
+    ***************/
+    
+    // pipe_node_1_in -> pipe_node_1_in 
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> (
+            (rxn(i) == pipe_reaction_0 ==> pipe_node_1_in(s(i)) == pipe_node_1_in(s(i)))
+            && (rxn(i) != pipe_reaction_0 ==> pipe_node_1_in(s(i)) == pipe_node_1_in(s(i - 1)))
+        ));
+    
+    // pipe_node_1_out -> pipe_node_1_out 
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> (
+            (rxn(i) == pipe_node_1_reaction_1 ==> pipe_node_1_out(s(i)) == pipe_node_1_out(s(i)))
+            && (rxn(i) != pipe_node_1_reaction_1 ==> pipe_node_1_out(s(i)) == pipe_node_1_out(s(i - 1)))
+        ));
+    
+    /********************
+    * Program Topology *
+    ********************/         
+    
+    // pipe.reaction_0 is triggered by timer.
+    axiom(timer_triggers(pipe_reaction_0, 0, 1000000000));
+    
+    // pipe.node_1.reaction_0 triggers pipe.node_1.reaction_1 via a logical action.
+    axiom(triggers_via_logical_action(pipe_node_1_reaction_0, pipe_node_1_reaction_1,
+        delay(pipe_node_1_reaction_0, pipe_node_1_reaction_1)));
+    
+    // pipe.reaction_0 triggers pipe.node_1.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(pipe_reaction_0, pipe_node_1_reaction_0,
+        delay(pipe_reaction_0, pipe_node_1_reaction_0)));
+    
+    // pipe.node_1.reaction_1 triggers pipe.reaction_1 via a logical connection.
+    axiom(triggers_via_logical_connection(pipe_node_1_reaction_1, pipe_reaction_1,
+        delay(pipe_node_1_reaction_1, pipe_reaction_1)));
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && pipe_value(s(0)) == 0
+        && pipe_node_1_count(s(0)) == 0
+        && pipe_node_1_payload(s(0)) == 0
+        && pipe_node_1_out(s(0)) == 0
+        && pipe_node_1_in(s(0)) == 0
+        ;
+        
+    /*********************
+    * Reactor Contracts *
+    *********************/
+    
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    //// Line 171 in the LF program
+    /* Pre/post conditions for pipe.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == pipe_reaction_0 ==> (
+        pipe_node_1_in(s(i)) == pipe_value(s(i)) && pipe_value(s(i)) == pipe_value(s(i-1)) + 1 && (exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_0 && g(j) == g(i)) && true && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1)) && pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1))
+    )));
+    
+    /* Pre/post conditions for pipe.reaction_1 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == pipe_reaction_1 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
+    )));
+    
+    //// Line 41 in the LF program
+    /* Pre/post conditions for pipe.node_1.reaction_1 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == pipe_node_1_reaction_1 ==> (
+        pipe_node_1_out(s(i)) == pipe_node_1_payload(s(i)) && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) - 1 && true && pipe_value(s(i)) == pipe_value(s(i-1)) && pipe_node_1_in(s(i)) == pipe_node_1_in(s(i-1))
+    )));
+    
+    //// Line 32 in the LF program
+    /* Pre/post conditions for pipe.node_1.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == pipe_node_1_reaction_0 ==> (
+        pipe_node_1_payload(s(i)) == pipe_node_1_in(s(i)) && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) + 1 && (exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_1 && g(j) == tag_schedule(g(i), zero())) && true && pipe_value(s(i)) == pipe_value(s(i-1)) && pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1))
+    )));
+    
+    /**************
+     * Invariants *
+     **************/
+    
+    // The property bound
+    const b : integer = 4;
+    
+    // max_k = trace end index - property bound - one consecution step
+    // Note: k is bounded by max_km which depends on the trace length.
+    //       The selection of k does not directly depend on max_k.
+    define max_k() : integer = END - b - 1; 
+    define k() : integer = max_k();
+    
+    // The FOL property translated from user-defined MTL property
+    define P(i : step_t) : boolean =
+        (pipe_node_1_count(s(i)) <= 1 && true && pipe_node_1_count(s(i)) >= 0);
+    
+    // Auxiliary invariant
+    define aux_inv(i : integer) : boolean =
+        // Add this here, so that in the consecution step,
+        // the first state respects start.
+        start_frame(i);
+    
+    // Strengthened property
+    define Q(i : step_t) : boolean =
+        P(i) && aux_inv(i);
+    
+    // Helper macro for temporal induction
+    define Globally_Q(start, end : step_t) : boolean =
+        (forall (i : integer) :: (i >= start && i <= end) ==> Q(i));
+    //////////////////////////////////////////////////
+    
+    /*************
+     * Induction *
+     *************/
+    // Initiation
+    property initiation : initial_condition() ==>
+        Globally_Q(0, k());
+    
+    // Consecution
+    property consecution : 
+        Globally_Q(0, k()) ==> Q(k()+1);
+    
+    // Make sure k is valid.
+    property N_is_valid :
+        k() <= max_k();
+    
+    control {
+        v = bmc(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+    
+}
