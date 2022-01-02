@@ -4,7 +4,7 @@
 # compile C with /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc
 C_DEFINES = 
 
-C_INCLUDES = -I/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/core -I/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/core/platform -I/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/core/federated
+C_INCLUDES = -I/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/core -I/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/core/platform -I/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/core/federated
 
 C_FLAGS = -O3 -DNDEBUG -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.5 -std=gnu11
 

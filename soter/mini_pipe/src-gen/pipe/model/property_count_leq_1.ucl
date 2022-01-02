@@ -91,15 +91,15 @@ module main {
         integer, 	// pipe.value
         integer, 	// pipe.node_1.count
         integer, 	// pipe.node_1.payload
-        integer, 	// pipe.node_1.out
-        integer 	// pipe.node_1.in
+        integer, 	// pipe.node_1.in
+        integer 	// pipe.node_1.out
     };
     // State variable projection macros
     define pipe_value(s : state_t) : integer = s._1;
     define pipe_node_1_count(s : state_t) : integer = s._2;
     define pipe_node_1_payload(s : state_t) : integer = s._3;
-    define pipe_node_1_out(s : state_t) : integer = s._4;
-    define pipe_node_1_in(s : state_t) : integer = s._5;
+    define pipe_node_1_in(s : state_t) : integer = s._4;
+    define pipe_node_1_out(s : state_t) : integer = s._5;
     
     //////////////////////////
     
@@ -115,7 +115,7 @@ module main {
     type step_t = integer;
     type event_t = { rxn_t, tag_t, state_t };
     
-    // Generate 7 events.
+    // Create a bounded trace of 7 events.
     type trace_t = {
         event_t,
         event_t,
@@ -161,8 +161,8 @@ module main {
     // Delay macro
     define delay(r1, r2 : rxn_t) : interval_t =
         if (r1 == pipe_node_1_reaction_0 && r2 == pipe_node_1_reaction_1) then nsec(0) else (
-        if (r1 == pipe_reaction_0 && r2 == pipe_node_1_reaction_0) then nsec(0) else (
         if (r1 == pipe_node_1_reaction_1 && r2 == pipe_reaction_1) then nsec(0) else (
+        if (r1 == pipe_reaction_0 && r2 == pipe_node_1_reaction_0) then nsec(0) else (
         inf()
         )));
     
@@ -171,8 +171,8 @@ module main {
     = tag_earlier(e1._2, e2._2)
             || (tag_same(e1._2, e2._2) && (
             (e1._1 == pipe_node_1_reaction_0 && e2._1 == pipe_node_1_reaction_1)
-            || (e1._1 == pipe_reaction_0 && e2._1 == pipe_node_1_reaction_0)
             || (e1._1 == pipe_node_1_reaction_1 && e2._1 == pipe_reaction_1)
+            || (e1._1 == pipe_reaction_0 && e2._1 == pipe_node_1_reaction_0)
             ));
     
     define startup_triggers(n : rxn_t) : boolean
@@ -291,13 +291,6 @@ module main {
     * Connections *
     ***************/
     
-    // pipe_node_1_in -> pipe_node_1_in 
-    axiom(forall (i : integer) :: (i > START && i <= END)
-        ==> (
-            (rxn(i) == pipe_reaction_0 ==> pipe_node_1_in(s(i)) == pipe_node_1_in(s(i)))
-            && (rxn(i) != pipe_reaction_0 ==> pipe_node_1_in(s(i)) == pipe_node_1_in(s(i - 1)))
-        ));
-    
     // pipe_node_1_out -> pipe_node_1_out 
     axiom(forall (i : integer) :: (i > START && i <= END)
         ==> (
@@ -305,24 +298,31 @@ module main {
             && (rxn(i) != pipe_node_1_reaction_1 ==> pipe_node_1_out(s(i)) == pipe_node_1_out(s(i - 1)))
         ));
     
+    // pipe_node_1_in -> pipe_node_1_in 
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> (
+            (rxn(i) == pipe_reaction_0 ==> pipe_node_1_in(s(i)) == pipe_node_1_in(s(i)))
+            && (rxn(i) != pipe_reaction_0 ==> pipe_node_1_in(s(i)) == pipe_node_1_in(s(i - 1)))
+        ));
+    
     /********************
     * Program Topology *
     ********************/         
-    
-    // pipe.reaction_0 is triggered by timer.
-    axiom(timer_triggers(pipe_reaction_0, 0, 1000000000));
     
     // pipe.node_1.reaction_0 triggers pipe.node_1.reaction_1 via a logical action.
     axiom(triggers_via_logical_action(pipe_node_1_reaction_0, pipe_node_1_reaction_1,
         delay(pipe_node_1_reaction_0, pipe_node_1_reaction_1)));
     
-    // pipe.reaction_0 triggers pipe.node_1.reaction_0 via a logical connection.
-    axiom(triggers_via_logical_connection(pipe_reaction_0, pipe_node_1_reaction_0,
-        delay(pipe_reaction_0, pipe_node_1_reaction_0)));
+    // pipe.reaction_0 is triggered by timer.
+    axiom(timer_triggers(pipe_reaction_0, 0, 1000000000));
     
     // pipe.node_1.reaction_1 triggers pipe.reaction_1 via a logical connection.
     axiom(triggers_via_logical_connection(pipe_node_1_reaction_1, pipe_reaction_1,
         delay(pipe_node_1_reaction_1, pipe_reaction_1)));
+    
+    // pipe.reaction_0 triggers pipe.node_1.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(pipe_reaction_0, pipe_node_1_reaction_0,
+        delay(pipe_reaction_0, pipe_node_1_reaction_0)));
     
     /*********************
      * Initial Condition *
@@ -335,8 +335,8 @@ module main {
         && pipe_value(s(0)) == 0
         && pipe_node_1_count(s(0)) == 0
         && pipe_node_1_payload(s(0)) == 0
-        && pipe_node_1_out(s(0)) == 0
         && pipe_node_1_in(s(0)) == 0
+        && pipe_node_1_out(s(0)) == 0
         ;
         
     /*********************
@@ -347,39 +347,61 @@ module main {
     * Reaction Contracts *
     **********************/
     
-    //// Line 174 in the LF program
     /* Pre/post conditions for pipe.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == pipe_reaction_0 ==> (
-        pipe_node_1_in(s(i)) == pipe_value(s(i)) && pipe_value(s(i)) == pipe_value(s(i-1)) + 1 && (exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_0 && g(j) == g(i)) && true && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1)) && pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1))
+        (rxn(i) == pipe_reaction_0 ==> ( true
+        //// Line 72 in the LF program
+        && (pipe_node_1_in(s(i)) == pipe_value(s(i)))
+        //// Line 73 in the LF program
+        && (pipe_value(s(i)) == pipe_value(s(i-1)) + 1)
+        //// Line 74 in the LF program
+        && ((exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_0 && g(j) == g(i)))
+        //// Line 75 in the LF program
+        && (pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)))
+        //// Line 76 in the LF program
+        && (pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1)))
+        //// Line 77 in the LF program
+        && (pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1)))
     )));
     
     /* Pre/post conditions for pipe.reaction_1 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == pipe_reaction_1 ==> (
-        true // Change "true" to pre/post conditions that hold for the reaction body.
+        (rxn(i) == pipe_reaction_1 ==> ( true
     )));
     
-    //// Line 41 in the LF program
     /* Pre/post conditions for pipe.node_1.reaction_1 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == pipe_node_1_reaction_1 ==> (
-        pipe_node_1_out(s(i)) == pipe_node_1_payload(s(i)) && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) - 1 && true && pipe_value(s(i)) == pipe_value(s(i-1)) && pipe_node_1_in(s(i)) == pipe_node_1_in(s(i-1))
+        (rxn(i) == pipe_node_1_reaction_1 ==> ( true
+        //// Line 43 in the LF program
+        && (pipe_node_1_out(s(i)) == pipe_node_1_payload(s(i)))
+        //// Line 44 in the LF program
+        && (pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) - 1)
+        //// Line 45 in the LF program
+        && (pipe_value(s(i)) == pipe_value(s(i-1)))
+        //// Line 46 in the LF program
+        && (pipe_node_1_in(s(i)) == pipe_node_1_in(s(i-1)))
     )));
     
-    //// Line 32 in the LF program
     /* Pre/post conditions for pipe.node_1.reaction_0 */
     axiom(forall (i : integer) :: (i > START && i <= END) ==>
-        (rxn(i) == pipe_node_1_reaction_0 ==> (
-        pipe_node_1_payload(s(i)) == pipe_node_1_in(s(i)) && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) + 1 && (exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_1 && g(j) == tag_schedule(g(i), zero())) && true && pipe_value(s(i)) == pipe_value(s(i-1)) && pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1))
+        (rxn(i) == pipe_node_1_reaction_0 ==> ( true
+        //// Line 31 in the LF program
+        && (pipe_node_1_payload(s(i)) == pipe_node_1_in(s(i)))
+        //// Line 32 in the LF program
+        && (pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) + 1)
+        //// Line 33 in the LF program
+        && ((exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_1 && g(j) == tag_schedule(g(i), zero())))
+        //// Line 34 in the LF program
+        && (pipe_value(s(i)) == pipe_value(s(i-1)))
+        //// Line 35 in the LF program
+        && (pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1)))
     )));
     
-    /**************
-     * Invariants *
-     **************/
-    
-    // The property bound
-    const b : integer = 4;
+    /************
+    * Property *
+    ************/
+    //// Line 60 in the LF program
+    const b : integer = 4; // The property bound
     
     // max_k = trace end index - property bound - one consecution step
     // Note: k is bounded by max_km which depends on the trace length.
@@ -387,15 +409,25 @@ module main {
     define max_k() : integer = END - b - 1; 
     define k() : integer = max_k();
     
-    // The FOL property translated from user-defined MTL property
+    // The FOL property translated from user-defined LTL property
     define P(i : step_t) : boolean =
-        !(pipe_node_1_count(s(i)) <= 1 && true && pipe_node_1_count(s(i)) >= 0 && (rxn(i) == pipe_reaction_0 ==> pipe_node_1_count(s(i)) == 0));
+        !(
+        true
+        //// Line 59 in the LF program
+        && (pipe_node_1_count(s(i)) <= 1)
+        )
+    ;
     
     // Auxiliary invariant
     define aux_inv(i : integer) : boolean =
         // Add this here, so that in the consecution step,
         // the first state respects start.
-        start_frame(i);
+        start_frame(i)
+        //// Line 61 in the LF program
+        && (pipe_node_1_count(s(i)) >= 0)
+        //// Line 62 in the LF program
+        && (rxn(i) == pipe_reaction_0 ==> pipe_node_1_count(s(i)) == 0)
+    ;
     
     // Strengthened property
     define Q(i : step_t) : boolean =
@@ -404,21 +436,20 @@ module main {
     // Helper macro for temporal induction
     define Globally_Q(start, end : step_t) : boolean =
         (forall (i : integer) :: (i >= start && i <= end) ==> Q(i));
-    //////////////////////////////////////////////////
     
-    /*************
-     * Induction *
-     *************/
+    /***************
+     * K-Induction *
+     ***************/
     // Initiation
-    property initiation : initial_condition() ==>
+    property initiation_count_leq_1 : initial_condition() ==>
         Globally_Q(0, k());
     
     // Consecution
-    property consecution : 
+    property consecution_count_leq_1 : 
         Globally_Q(0, k()) ==> Q(k()+1);
     
     // Make sure k is valid.
-    property N_is_valid :
+    property N_is_valid_count_leq_1 :
         k() <= max_k();
     
     control {
@@ -427,5 +458,4 @@ module main {
         print_results;
         v.print_cex;
     }
-    
 }

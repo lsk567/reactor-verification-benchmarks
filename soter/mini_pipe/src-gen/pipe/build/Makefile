@@ -67,10 +67,10 @@ RM = /opt/local/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe
+CMAKE_SOURCE_DIR = /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/build
+CMAKE_BINARY_DIR = /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -145,9 +145,9 @@ list_install_components/fast: list_install_components
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/build/CMakeFiles /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/build/CMakeFiles /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

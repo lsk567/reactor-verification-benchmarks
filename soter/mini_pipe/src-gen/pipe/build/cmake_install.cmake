@@ -1,8 +1,8 @@
-# Install script for directory: /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe
+# Install script for directory: /Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe")
+  set(CMAKE_INSTALL_PREFIX "/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,7 +38,7 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/build/pipe")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/build/pipe")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/pipe" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/pipe")
     if(CMAKE_INSTALL_DO_STRIP)
@@ -55,5 +55,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/src-gen/pipe/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/mini_pipe/src-gen/pipe/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
