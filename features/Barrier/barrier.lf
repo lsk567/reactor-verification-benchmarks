@@ -1,0 +1,19 @@
+target C {
+    verification: {
+        engine: uclid,
+        induction: 2
+    }
+}
+
+reactor nested {
+    input in:int;
+    reaction(in) {==}
+}
+
+@property("test", false)
+@bound("test", 2)
+main reactor {
+    n = new nested();
+    @inv(set(n.in, 1))
+    reaction(startup) -> n.in {==}
+}

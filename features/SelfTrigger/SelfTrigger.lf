@@ -1,0 +1,17 @@
+target C {
+    verification: {
+        engine: uclid,
+        induction: 3
+    }
+}
+
+@property("test", false)
+@bound("test", 5)
+main reactor {
+    logical action act(1 sec):int;
+
+    @inv(schedule(act, -1))
+    reaction(startup, act) -> act {=
+        schedule(act, 0);
+    =}
+}

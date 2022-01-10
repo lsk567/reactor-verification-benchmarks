@@ -1,0 +1,21 @@
+target C;
+
+reactor A {
+    output out:int;
+    reaction(startup) -> out {=
+        SET(out, 1);
+    =}
+}
+
+reactor B {
+    input in:int;
+    reaction(in) {=
+        printf("%d\n", in->value);
+    =}
+}
+
+main reactor {
+    a = new A();
+    b = new B();
+    a.out -> b.in after 1 sec;
+}

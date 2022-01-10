@@ -1,0 +1,29 @@
+target C {
+    verification: {
+        engine: uclid,
+        induction: 1
+    }
+};
+
+reactor A {
+    output out:int;
+    @inv(set(out, 1))
+    reaction(startup) -> out {=
+        SET(out, 1);
+    =}
+}
+
+reactor B {
+    input in:int;
+    reaction(in) {=
+        printf("%d\n", in->value);
+    =}
+}
+
+@property("test", ![F[b.reaction[1]]])
+@bound("test", 3)
+main reactor {
+    a = new A();
+    b = new B();
+    a.out -> b.in after 1 sec;
+}

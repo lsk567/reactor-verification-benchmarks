@@ -1,0 +1,25 @@
+target C {
+    verification: {
+        engine: uclid,
+        steps: 10
+    }
+}
+
+reactor A {
+    input in:int;
+
+    @inv(in > 1)
+    reaction(in) {=
+
+    =}
+}
+
+// @property("refTest", a.reaction[0] ==> (1 != 2))
+@property("refTest", a.reaction[0] ==> F[a.in == 0 /\ at(2 sec)])
+main reactor {
+    a = new A();
+
+    reaction(startup) {=
+
+    =}
+}

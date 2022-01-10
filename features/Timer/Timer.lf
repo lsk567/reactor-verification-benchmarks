@@ -1,0 +1,45 @@
+target C {
+    verification: {
+        engine: uclid,
+        induction: 10
+    }
+}
+
+reactor Source {
+
+    timer t(0, 1 sec);
+    output out:int;
+
+    @inv(set(out, 1))
+    reaction(t) -> out {=
+        SET(out, 1);
+    =}
+}
+
+reactor Node {
+    input in:int;
+    output out:int;
+
+    @inv(set(out, 1))
+    reaction(in) -> out {=
+        SET(out, in->value);
+    =}
+}
+
+reactor Sink {
+    input in:int;
+
+    reaction(in) {==}
+}
+
+// @property("test", source.reaction[1] ==> F[source.reaction[1] /\ at(500 msec)])
+@property("test", false)
+@bound("test", 1)
+main reactor {
+    source = new Source();
+    sink = new Sink();
+    node = new Node();
+
+    source.out -> node.in;
+    node.out -> sink.in after 1 sec;
+}

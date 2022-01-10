@@ -1,0 +1,25 @@
+/* This example is created to test the handling of multiple properties. */
+target C {
+    verification: {
+        engine: uclid,
+        steps: 10
+    }
+}
+
+// 1st property
+@property("prop1", "true")
+@aux("prop1", "false")
+@bound("prop1", 1)
+// 2nd property
+@property("prop2", "false")
+@aux("prop2", "false ==> true")
+@bound("prop2", 2)
+// 3rd property
+@property("prop3", "true || false")
+@aux("prop3", "false")
+@bound("prop3", 3)
+main reactor {
+    logical action a(1 sec);
+    reaction(startup) -> a {==}
+    reaction(a) {==}
+}

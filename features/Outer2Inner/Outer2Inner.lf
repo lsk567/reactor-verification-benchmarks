@@ -1,0 +1,19 @@
+target C {
+    verification: {
+        engine: uclid,
+        induction: 1
+    }
+}
+
+reactor A {
+    input in:int;
+    reaction(in) {==}
+}
+
+@property("test", false)
+@bound("test", 2)
+main reactor {
+    a = new A();
+    @inv(F[a.reaction[1] /\ simultaneous])
+    reaction(startup) -> a.in {==}
+}

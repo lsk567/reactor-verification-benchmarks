@@ -1,0 +1,15 @@
+target C {
+    verification: {
+        engine: uclid,
+        induction: 3
+    }
+};
+
+@property("test", reaction[2] ==> [a == 2])
+@bound("test", 2)
+main reactor {
+    logical action a(1 sec):int;
+    @inv(schedule(a, 1))
+    reaction(startup) -> a {==}
+    reaction(a) {==}
+}

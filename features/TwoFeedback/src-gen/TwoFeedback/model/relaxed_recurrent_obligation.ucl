@@ -1,0 +1,397 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // mstep() produces a mstep delay. zero() produces no delay.
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 1)
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 0)
+                then t // no delay
+                else (
+                    if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+                    then { pi1(t) + pi1(i), 0 }
+                    else inf()
+                ));
+    
+    // Deprecated.
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        TwoFeedback_reaction_0,
+        NULL
+    };
+    type state_t = {
+        integer,    // TwoFeedback_a
+        integer    // TwoFeedback_b
+    };
+    // State variable projection macros
+    define TwoFeedback_a(s : state_t) : integer = s._1;
+    define TwoFeedback_b(s : state_t) : integer = s._2;
+    
+    type trigger_t = {
+        boolean,    // TwoFeedback_a
+        boolean    // TwoFeedback_b
+    };
+    // Trigger presence projection macros
+    define TwoFeedback_a_is_present(t : trigger_t) : boolean = t._1;
+    define TwoFeedback_b_is_present(t : trigger_t) : boolean = t._2;
+    
+    /********************
+     * Trace Definition *
+     *******************/
+    const START : integer = 0;
+    const END : integer = 7;
+    
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t, trigger_t };
+    
+    // Create a bounded trace of 8 events.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * Helper Macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    if (i == 3) then tr._4 else (
+    if (i == 4) then tr._5 else (
+    if (i == 5) then tr._6 else (
+    if (i == 6) then tr._7 else (
+    if (i == 7) then tr._8 else (
+    { NULL, inf(), { 0, 0 }, { false, false } } ))))))));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t        = elem(i)._1;
+    define g        (i : step_t) : tag_t        = elem(i)._2;
+    define s        (i : step_t) : state_t      = elem(i)._3;
+    define t        (i : step_t) : trigger_t    = elem(i)._4;
+    define isNULL   (i : step_t) : boolean      = rxn(i) == NULL;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            ;
+    
+    define startup_triggers(n : rxn_t) : boolean
+    =   // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (exists (i : integer) :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())));
+    
+    //// Encoding the behavior of timers
+    define is_multiple_of(a, b : integer) : boolean
+    = exists (c : integer) :: b * c == a;
+    
+    define is_closest_starting_point(t : tag_t, period, offset : integer) : boolean
+    = (exists (c : integer) :: (period * c) + offset == pi1(t)
+        // Tick at the next valid instant.
+        && (period * (c - 1) + offset) < start)     
+        // Timer always has mstep of 0.
+        && pi2(t) == 0;
+    
+    // Can directly use index as HB since this only applies to events
+    // on the same federate.
+    define is_latest_invocation_in_same_fed_wrt(a, b : integer) : boolean
+    = !(exists (c : integer) :: in_range(c)
+        && rxn(c) == rxn(a) && a < c && c < b);
+    
+    define timer_triggers(_rxn : rxn_t, offset, period : integer) : boolean =
+        // 1. If the initial event is within frame, show it.
+        (exists (i : integer) :: in_range(i)
+        && rxn(i) == _rxn
+        && is_closest_starting_point(g(i), period, offset))
+        // 2. The SPACING between two consecutive timer firings is the period.
+        // FIXME: Is the use of two in_range() here appropriate?
+        // Shaokai: Seems so to me, since the first state is not actually constrained.
+        && (forall (i, j : integer) :: (in_range(i) && in_range(j) && i < j
+            && rxn(i) == _rxn && rxn(j) == _rxn
+            // ...and there does not exist a 3rd invocation in between
+            && !(exists (k : integer) :: rxn(k) == _rxn && i < k && k < j))
+                ==> g(j) == tag_schedule(g(i), {period, 0}))
+        // 3. There does not exist other events in the same federate that 
+        // differ by the last timer invocation by g(last_timer) + period.
+        // In other words, this axiom ensures a timer fires when it needs to.
+        //
+        // a := index of the offending event that occupy the spot of a timer tick.
+        // b := index of non-timer event on the same federate
+        // both in_range's are needed due to !(exists), which turns into a forall.
+        && !(exists (b, a : integer) :: in_range(a) && in_range(b)
+            && rxn(b) != _rxn
+            // && _id_same_fed(elem(b), {_id, zero()})
+            && rxn(a) == _rxn
+            && (is_latest_invocation_in_same_fed_wrt(a, b)
+                && tag_later(g(b), tag_schedule(g(a), {period, 0}))));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j))));
+    
+    // Tags should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    // Begin the frame at the start time specified.
+    define start_frame(i : step_t) : boolean =
+        (tag_same(g(i), {start, 0}) || tag_later(g(i), {start, 0}));
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> start_frame(i));
+    
+    // NULL events should appear in the suffix, except for START.
+    axiom(forall (j : integer) :: (j > START && j <= END) ==> (
+        (rxn(j)) != NULL) ==> 
+            (forall (i : integer) :: (i > START && i < j) ==> (rxn(i) != NULL)));
+    
+    // When a NULL event occurs, the state stays the same.
+    axiom(forall (j : integer) :: (j > START && j <= END) ==> (
+        (rxn(j) == NULL) ==> (s(j) == s(j-1))
+    ));
+    
+    /***************************
+    * Connections and Actions *
+    ***************************/
+    
+    // If TwoFeedback_a is present, then there exists a TwoFeedback_reaction_0
+    // that scheduled it.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ( true
+        // If TwoFeedback_a is present, there exists an TwoFeedback_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (TwoFeedback_a_is_present(t(i)) ==> (
+            exists (j : integer) :: j >= START && j < i
+            && rxn(j) == TwoFeedback_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If TwoFeedback_a is not present, then value stays the same.
+        && (!TwoFeedback_a_is_present(t(i)) ==> (
+            TwoFeedback_a(s(i)) == TwoFeedback_a(s(i-1))
+        ))
+    ));
+    
+    // If TwoFeedback_b is present, then there exists a TwoFeedback_reaction_0
+    // that scheduled it.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ( true
+        // If TwoFeedback_b is present, there exists an TwoFeedback_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (TwoFeedback_b_is_present(t(i)) ==> (
+            exists (j : integer) :: j >= START && j < i
+            && rxn(j) == TwoFeedback_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(2000000000))
+        ))
+        // If TwoFeedback_b is not present, then value stays the same.
+        && (!TwoFeedback_b_is_present(t(i)) ==> (
+            TwoFeedback_b(s(i)) == TwoFeedback_b(s(i-1))
+        ))
+    ));
+    
+    /********************************
+    * Reactions and Their Triggers *
+    ********************************/
+    
+    // TwoFeedback.reaction_0 is invoked when any of it triggers are present.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ((
+        false
+        || g(i) == zero()
+        || TwoFeedback_a_is_present(t(i))
+        || TwoFeedback_b_is_present(t(i))
+    ) <==> (rxn(i) == TwoFeedback_reaction_0)));
+    /**********************
+    * Startup & Shutdown *
+    **********************/         
+    
+    // TwoFeedback.reaction_0 is triggered by startup.
+    axiom(startup_triggers(TwoFeedback_reaction_0));
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && TwoFeedback_a(s(0)) == 0
+        && TwoFeedback_b(s(0)) == 0
+        ;
+        
+    /*********************
+    * Reactor Contracts *
+    *********************/
+    
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    /* Pre/post conditions for TwoFeedback.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == TwoFeedback_reaction_0 ==> ( true
+        //// Line 17 in the LF program
+        && (((((
+        (
+        !(exists (x : integer) :: x > i && rxn(x) == TwoFeedback_reaction_0)
+        && !(exists (y : integer) :: y > i && y <= END && tag_later(g(y), tag_schedule(g(i), sec(1))))
+        )
+        || ((i < END) ==> (exists (i0 : integer) :: i0 > i && TwoFeedback_a_is_present(t(i0)) && TwoFeedback_a(s(i0)) == -1 && g(i0) == tag_schedule(g(i), nsec(1000000000))))
+        )))))
+    )));
+    
+    /************
+    * Property *
+    ************/
+    // trace length = k + N
+    const k : integer = 3;       // Induction steps
+    const N : integer = 5;   // The property bound
+    
+    // The FOL property translated from user-defined LTL property
+    define P(i : step_t) : boolean =
+        true
+        //// Line 8 in the LF program
+        && ((((((false))))))
+    ;
+    
+    // Auxiliary invariant
+    define aux_inv(i : integer) : boolean =
+        // Add this here, so that in the consecution step,
+        // the first state respects start.
+        start_frame(i)
+    ;
+    
+    // Strengthened property
+    define Q(i : step_t) : boolean =
+        P(i) && aux_inv(i);
+    
+    // Helper macro for temporal induction
+    define Globally_Q(start, end : step_t) : boolean =
+        (forall (i : integer) :: (i >= start && i <= end) ==> Q(i));
+    
+    /***************
+     * K-Induction *
+     ***************/
+    // Initiation
+    /*
+    property initiation_test : initial_condition() ==>
+        Globally_Q(0, k);
+    
+    // Consecution
+    property consecution_test : 
+        Globally_Q(0, k) ==> Q(k+1);
+        */
+
+    property test : rxn(3) != TwoFeedback_reaction_0;
+    
+    control {
+        v = bmc(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+}

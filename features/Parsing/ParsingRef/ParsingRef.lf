@@ -1,0 +1,25 @@
+target C {
+    verification: {
+        engine: uclid,
+        steps: 10
+    },
+    no-compile: true
+};
+
+@inv(in, t, a, s, reaction[0])
+@inv(in ==> false)
+@inv([[in /\ !s] ==> [true <==> in]])
+reactor A {
+    input in:int;
+    timer t;
+    logical action a;
+    state s:int(0);
+    reaction(startup) {==}
+}
+
+@property("test", "false")
+@bound("test", 10)
+@aux("test", "false")
+main reactor {
+    a = new A();
+}

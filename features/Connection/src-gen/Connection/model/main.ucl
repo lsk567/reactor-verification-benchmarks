@@ -1,0 +1,395 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // Tag algebra
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && pi1(i) == 0 && !isInf(i))
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+            then { pi1(t) + pi1(i), 0 }
+            else inf());
+    
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        Connection_source_reaction_0,
+        Connection_sink_reaction_0,
+        NULL
+    };
+    type state_t = {
+        integer, 	// Connection.sink.out
+        integer, 	// Connection.sink.in
+        integer 	// Connection.source.out
+    };
+    // State variable projection macros
+    define Connection_sink_out(s : state_t) : integer = s._1;
+    define Connection_sink_in(s : state_t) : integer = s._2;
+    define Connection_source_out(s : state_t) : integer = s._3;
+    
+    //////////////////////////
+    
+    /********************
+    * Trace Definition *
+    *******************/
+    const START : integer = 0;
+    const END : integer = 33;
+    
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t };
+    
+    // Generate 34 events.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * helper macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    if (i == 3) then tr._4 else (
+    if (i == 4) then tr._5 else (
+    if (i == 5) then tr._6 else (
+    if (i == 6) then tr._7 else (
+    if (i == 7) then tr._8 else (
+    if (i == 8) then tr._9 else (
+    if (i == 9) then tr._10 else (
+    if (i == 10) then tr._11 else (
+    if (i == 11) then tr._12 else (
+    if (i == 12) then tr._13 else (
+    if (i == 13) then tr._14 else (
+    if (i == 14) then tr._15 else (
+    if (i == 15) then tr._16 else (
+    if (i == 16) then tr._17 else (
+    if (i == 17) then tr._18 else (
+    if (i == 18) then tr._19 else (
+    if (i == 19) then tr._20 else (
+    if (i == 20) then tr._21 else (
+    if (i == 21) then tr._22 else (
+    if (i == 22) then tr._23 else (
+    if (i == 23) then tr._24 else (
+    if (i == 24) then tr._25 else (
+    if (i == 25) then tr._26 else (
+    if (i == 26) then tr._27 else (
+    if (i == 27) then tr._28 else (
+    if (i == 28) then tr._29 else (
+    if (i == 29) then tr._30 else (
+    if (i == 30) then tr._31 else (
+    if (i == 31) then tr._32 else (
+    if (i == 32) then tr._33 else (
+    if (i == 33) then tr._34 else (
+    { NULL, inf(), { 0, 0, 0 } } ))))))))))))))))))))))))))))))))));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t    = elem(i)._1;
+    define g        (i : step_t) : tag_t    = elem(i)._2;
+    define s        (i : step_t) : state_t  = elem(i)._3;
+    define isNULL   (i : step_t) : boolean  = rxn(i) == NULL;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Delay macro
+    define delay(r1, r2 : rxn_t) : interval_t =
+        if (r1 == Connection_source_reaction_0 && r2 == Connection_sink_reaction_0) then nsec(10000000) else (
+        inf()
+        );
+    
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            || (tag_same(e1._2, e2._2) && (
+            (e1._1 == Connection_source_reaction_0 && e2._1 == Connection_sink_reaction_0)
+            ));
+    
+    define startup_triggers(n : rxn_t) : boolean
+    = // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (exists (i : integer) :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())))
+        // Can ONLY be triggered at (0,0).
+        // FIXME: this case seems to be taken care of by an axiom below.
+        && !(exists (j : integer) :: in_range(j) && rxn(j) == n
+            && !tag_same(g(j), zero()));
+    
+    // Note: The current formulation of "triggers" precludes
+    //       partial reaction triggering chain.
+    // This includes the possibility that upstream does NOT output.
+    define triggers_via_logical_action
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_schedule(g(j), delay)));
+    
+    define triggers_via_logical_connection
+        (upstream, downstream : rxn_t, delay : interval_t) : boolean
+    = forall (i : integer) :: in_range(i)
+        ==> (rxn(i) == downstream 
+            ==> (exists (j : integer) :: in_range(j)
+                && rxn(j) == upstream 
+                && g(i) == tag_delay(g(j), delay)));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(forall (i, j : integer) :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j))));
+    
+    // Tags should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    /***************
+    * Connections *
+    ***************/
+    
+    // Connection_source_out -> Connection_sink_in 
+    axiom(forall (i : integer) :: (i > START && i <= END)
+        ==> (
+            (rxn(i) == Connection_source_reaction_0 ==> Connection_sink_in(s(i)) == Connection_source_out(s(i)))
+            && (rxn(i) != Connection_source_reaction_0 ==> Connection_sink_in(s(i)) == Connection_sink_in(s(i - 1)))
+        ));
+    
+    /********************
+    * Program Topology *
+    ********************/         
+    
+    // Connection.source.reaction_0 triggers Connection.sink.reaction_0 via a logical connection.
+    axiom(triggers_via_logical_connection(Connection_source_reaction_0, Connection_sink_reaction_0,
+        delay(Connection_source_reaction_0, Connection_sink_reaction_0)));
+    
+    // Connection.source.reaction_0 is triggered by startup.
+    axiom(startup_triggers(Connection_source_reaction_0));
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && Connection_sink_out(s(0)) == 0
+        && Connection_sink_in(s(0)) == 0
+        && Connection_source_out(s(0)) == 0
+        ;
+        
+    /*********************
+    * Reactor Contracts *
+    *********************/
+    
+    // From Line 18 in the LF program
+    /* Input/output relations for Sink */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        Connection_sink_in(s(i)) == Connection_sink_out(s(i))
+    ));
+    
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    // From Line 11 in the LF program
+    /* Pre/post conditions for Connection.source.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == Connection_source_reaction_0 ==> (
+        true ==> Connection_source_out(s(i)) == 1
+    )));
+    
+    // From Line 12 in the LF program
+    /* Pre/post conditions for Connection.source.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == Connection_source_reaction_0 ==> (
+        false ==> Connection_source_out(s(i)) == 1
+    )));
+    
+    /* Pre/post conditions for Connection.sink.reaction_0 */
+    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+        (rxn(i) == Connection_sink_reaction_0 ==> (
+        true // Change "true" to pre/post conditions that hold for the reaction body.
+    )));
+    
+    /**************
+     * Invariants *
+     **************/
+    
+    // The property bound
+    const b : integer = 2;
+    
+    // max_k = trace end index - property bound - one consecution step
+    // Note: k is bounded by max_km which depends on the trace length.
+    //       The selection of k does not directly depend on max_k.
+    define max_k() : integer = END - b - 1; 
+    define k() : integer = max_k();
+    
+    // The FOL property translated from user-defined MTL property
+    define P(i : step_t) : boolean =
+        (rxn(i) == Connection_source_reaction_0) ==> (forall (j : integer) :: (j > i && j <= i + (b-1) && rxn(j) == Connection_sink_reaction_0) ==> tag_earlier(g(j), tag_schedule(g(i), sec(2))));
+    
+    // Auxiliary invariant
+    define aux_inv(i : integer) : boolean =
+        true;   // TODO: replace
+    
+    // Strengthened property
+    define Q(i : step_t) : boolean =
+        P(i) && aux_inv(i);
+    
+    // Helper macro for temporal induction
+    define Globally_Q(start, end : step_t) : boolean =
+        (forall (i : integer) :: (i >= start && i <= end) ==> Q(i));
+    //////////////////////////////////////////////////
+    
+    /*************
+     * Induction *
+     *************/
+    // Initiation
+    property initiation : initial_condition() ==>
+        Globally_Q(0, k());
+    
+    // Consecution
+    property consecution : 
+        Globally_Q(0, k()) ==> Q(k()+1);
+    
+    // Make sure k is valid.
+    property N_is_valid :
+        k() <= max_k();
+    
+    control {
+        v = bmc(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+    
+}

@@ -1,0 +1,26 @@
+target C {
+    verification: {
+        engine: uclid,
+        steps: 10
+    }
+};
+
+@inv(F[in /\ !s] ==> G[[in \/ t] <==> in ==> [in /\ t] U [in \/ t]])
+reactor A {
+    input in:int;
+    timer t;
+    logical action a;
+    state s:int(0);
+
+    @inv(F[in /\ !s] ==> G[[in \/ t] <==> in ==> [in /\ t] U [in \/ t]])
+    reaction(startup) {==}
+}
+
+@property("test", a.in ==> G[a.s > (1 + a.in)])
+@bound("test", 10)
+@aux("test", "false")
+main reactor {
+    timer t;
+    a = new A();
+    reaction(startup) -> a.in {==}
+}
