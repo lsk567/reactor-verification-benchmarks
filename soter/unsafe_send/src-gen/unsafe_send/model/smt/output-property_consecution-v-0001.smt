@@ -563,25 +563,7 @@
      :skolemid _skolem_19
      :qid _forall_11)))
 (assert true)
-(assert (let ((a!1 (exists ((j Int))
-             (! (let ((a!1 (ite (= j 4)
-                                (__f5 initial_2_trace)
-                                (ite (= j 5)
-                                     (__f6 initial_2_trace)
-                                     (_tuple_0 NULL
-                                               (_tuple_1 (- 1) 0)
-                                               (_tuple_1 0 0))))))
-                (let ((a!2 (ite (= j 1)
-                                (__f2 initial_2_trace)
-                                (ite (= j 2)
-                                     (__f3 initial_2_trace)
-                                     (ite (= j 3) (__f4 initial_2_trace) a!1)))))
-                (let ((a!3 (= (__f1 (ite (= j 0) (__f1 initial_2_trace) a!2))
-                              unsafe_send_reaction_1)))
-                  (and (not (<= j 1)) (<= j 5) a!3))))
-                :skolemid _skolem_23
-                :qid _exists_9)))
-      (a!2 (forall ((i Int))
+(assert (let ((a!1 (forall ((i Int))
              (! (let ((a!1 (exists ((j Int))
                              (! (let ((a!1 (ite (= j 4)
                                                 (__f5 initial_2_trace)
@@ -605,10 +587,28 @@
                                   (and (not (<= j i)) (<= j 5) a!3))))
                                 :skolemid _skolem_21
                                 :qid _exists_8))))
-                  (or (not (and (>= i 0) (<= i 0))) (not a!1)))
+                  (or (not (and (>= i 0) (<= i 0))) a!1))
                 :skolemid _skolem_22
-                :qid _forall_13))))
-  (not (or (not a!1) (not a!2)))))
+                :qid _forall_13)))
+      (a!2 (exists ((j Int))
+             (! (let ((a!1 (ite (= j 4)
+                                (__f5 initial_2_trace)
+                                (ite (= j 5)
+                                     (__f6 initial_2_trace)
+                                     (_tuple_0 NULL
+                                               (_tuple_1 (- 1) 0)
+                                               (_tuple_1 0 0))))))
+                (let ((a!2 (ite (= j 1)
+                                (__f2 initial_2_trace)
+                                (ite (= j 2)
+                                     (__f3 initial_2_trace)
+                                     (ite (= j 3) (__f4 initial_2_trace) a!1)))))
+                (let ((a!3 (= (__f1 (ite (= j 0) (__f1 initial_2_trace) a!2))
+                              unsafe_send_reaction_1)))
+                  (and (not (<= j 1)) (<= j 5) a!3))))
+                :skolemid _skolem_23
+                :qid _exists_9))))
+  (not (or (not a!1) a!2))))
 
 
 (check-sat)

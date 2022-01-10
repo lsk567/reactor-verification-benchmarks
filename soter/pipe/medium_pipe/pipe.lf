@@ -1,0 +1,84 @@
+/**
+ *  Original Description:
+ *
+ *     A simple sequence of N processes arranged in a linear pipe:
+ *     every process knows only the next in the row and forwards everything to it.
+ *
+ *     A property Soter can prove is that the mailbox of each `pipe_node`
+ *     contains at most 1 message at any given time.
+ *
+ *     Adapted from [(Kobayashi, Nakade and Yonezawa, 1995)](http://dx.doi.org/10.1007/3-540-60360-3_42)
+ */
+target C {
+    verification: {
+        engine: uclid,
+        induction: 10
+    }
+};
+
+reactor Source {
+
+    // timer t(0, 1 sec);
+    output out:int;
+    logical action _timer(1 sec):int;
+
+    @inv(set(out, 1))
+    @inv(schedule(_timer, 0))
+    reaction(startup, _timer) -> out, _timer {=
+        SET(out, 1);
+        schedule(_timer, 0);
+    =}
+}
+
+reactor Sink {
+    input in:int;
+    reaction(in) {=
+        printf("Received after pipeline: %d\n", in->value);
+    =}
+}
+
+reactor Node {
+    
+    input  in:int;
+    output out:int;
+    
+    state  count:int;
+    state  payload:int;
+
+    logical action send_output:int;
+
+    // @inv(
+    //     // payload == in
+    //     // /\ count == (prev(count) + 1)
+    //     schedule(send_output, 0)
+    // ) // Dummy payload
+    reaction(in) -> send_output {=
+        self->payload = in->value;
+        self->count++;
+        schedule(send_output, 0);
+    =}
+
+    // @inv(
+    //     // FIXME: uncommenting this blocks the solver
+    //     set(out, 1) // FIXME: make it reference payload
+    //     // /\ count == (prev(count) - 1)
+    // )  
+    reaction(send_output) -> out {=
+        SET(out, self->payload);
+        self->count--;
+    =}
+}
+
+@property("count", source.reaction[1] ==> F[source.reaction[1] /\ at(500 msec)])
+@bound("count", 5)
+main reactor {
+    
+    source = new Source();
+    sink = new Sink();
+    node_1 = new Node();
+    node_2 = new Node();
+
+    source.out -> node_1.in;
+    node_1.out -> node_2.in after 1 sec;
+    node_2.out -> sink.in;
+}

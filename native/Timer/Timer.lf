@@ -1,0 +1,32 @@
+/**
+ * Test the timer functionality
+ * and the start frame axiom
+ */
+
+target C {
+    verification: {
+        engine: uclid,
+        steps: 10
+    }
+};
+
+// Is this a lower bound that is long enough for CEX to appear?
+// It doesn't seem to be the same bound as Armoni suggested,
+// since Armoni's bound suggests that we need to be able to
+// determine the truth value for EVERY path within this bound.
+// In other words, what is number of events we need to look at
+// before knowing the truth value of a formula? There must be
+// a bound if we disallow Zeno conditions.
+// 1. We need to disable NULL events. 
+//
+@property("(rxn(i) == Timer_reaction_0) ==> (exists (j : integer) :: j > i && j <= END && g(j) == tag_schedule(g(i), sec(1)) && rxn(j) == Timer_reaction_0)", 2) // Cannot be proven because of trailing NULL events.
+// @property("pi1(g(i)) >= start", 1) // Resolved
+main reactor {
+    
+    state s:int(0) // Dummy state variable
+    timer t(0, 1 sec)
+
+    reaction(t) {=
+
+    =}
+}

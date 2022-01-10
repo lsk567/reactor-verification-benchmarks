@@ -1,0 +1,88 @@
+/**
+ *  Original Description:
+ *
+ *     A simple sequence of N processes arranged in a linear pipe:
+ *     every process knows only the next in the row and forwards everything to it.
+ *
+ *     A property Soter can prove is that the mailbox of each `pipe_node`
+ *     contains at most 1 message at any given time.
+ *
+ *     Adapted from [(Kobayashi, Nakade and Yonezawa, 1995)](http://dx.doi.org/10.1007/3-540-60360-3_42)
+ */
+
+target C {
+    verification: {
+        engine: uclid,
+        steps: 7
+    }
+};
+
+reactor Node1 {
+    
+    input  in:int;
+    output out:int;
+    
+    state  count:int;
+    state  payload:int;
+
+    logical action send_output;
+    
+    // LTL: payload == in /\ count == prev(count) + 1 /\ F(reaction_1 /\ 1 mstep later)
+    @inv("pipe_node_1_payload(s(i)) == pipe_node_1_in(s(i))")
+    @inv("pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) + 1")
+    @inv("(exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_1 && g(j) == tag_schedule(g(i), zero()))")
+    @inv("pipe_value(s(i)) == pipe_value(s(i-1))")
+    @inv("pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1))")
+    reaction(in) -> send_output {=
+        self->payload = in->value;
+        self->count++;
+        schedule(send_output, 0);
+    =}
+
+    // LTL: out == payload /\ count == prev(count) - 1
+    @inv("pipe_node_1_out(s(i)) == pipe_node_1_payload(s(i))")
+    @inv("pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1)) - 1")
+    @inv("pipe_value(s(i)) == pipe_value(s(i-1))")
+    @inv("pipe_node_1_in(s(i)) == pipe_node_1_in(s(i-1))")
+    reaction(send_output) -> out {=
+        SET(out, self->payload);
+        self->count--;
+    =}
+}
+
+// FIXME: Not passing since the consecution step assume state is initially 1. How to fix this?
+// Soln: Add an auxiliary invariant that says when pipe_reaction_0 triggers, node_1_count is 0.
+//
+// TODOs from this small example:
+// 1. Make sure to add grammar to express "produces output."
+// 2. Make sure the default behavior for NULL is not outputting value.
+// 3. Make sure for consecution step, we should disable NULL in the first state, otherwise 1-induction sometimes does not work. See the example if you make steps 6.
+//
+// LTL: G(node_1.count <= 1)
+@property("count_leq_1", "pipe_node_1_count(s(i)) <= 1")
+@bound("count_leq_1", 4)
+@aux("count_leq_1", "pipe_node_1_count(s(i)) >= 0")
+@aux("count_leq_1", "rxn(i) == pipe_reaction_0 ==> pipe_node_1_count(s(i)) == 0")
+main reactor {
+    
+    node_1 = new Node1();
+
+    timer t(0, 1 sec);
+    state value:int(0);
+
+    // MTL: F[0](node_1.reaction_0)
+    // FIXME: need to specify that all the other variables do not change.
+    @inv("pipe_node_1_in(s(i)) == pipe_value(s(i))")
+    @inv("pipe_value(s(i)) == pipe_value(s(i-1)) + 1")
+    @inv("(exists (j : integer) :: j > i && j <= END && rxn(j) == pipe_node_1_reaction_0 && g(j) == g(i))")
+    @inv("pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))")
+    @inv("pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))")
+    @inv("pipe_node_1_out(s(i)) == pipe_node_1_out(s(i-1))")
+    reaction(t) -> node_1.in {=
+        SET(node_1.in, self->value++);
+    =}
+
+    reaction(node_1.out) {=
+        printf("Received after pipeline: %d\n", node_1.out->value);
+    =}
+}

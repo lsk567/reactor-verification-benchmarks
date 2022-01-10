@@ -589,7 +589,7 @@
                                   (and (not (<= j i)) (<= j 5) a!3))))
                                 :skolemid _skolem_21
                                 :qid _exists_8))))
-                  (or (not (and (>= i 0) (<= i 0))) (not a!1)))
+                  (or (not (and (>= i 0) (<= i 0))) a!1))
                 :skolemid _skolem_22
                 :qid _forall_13))))
 (let ((a!3 (and (= initial_1_start 0)
