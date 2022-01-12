@@ -86,20 +86,24 @@ module main {
     // Application Specific
     // Reaction ids
     type rxn_t = enum {
-        SelfTrigger_reaction_0,
+        TwoFeedback_reaction_0,
         NULL
     };
     type state_t = {
-        integer    // SelfTrigger_act
+        integer,    // TwoFeedback_b
+        integer    // TwoFeedback_a
     };
     // State variable projection macros
-    define SelfTrigger_act(s : state_t) : integer = s._1;
+    define TwoFeedback_b(s : state_t) : integer = s._1;
+    define TwoFeedback_a(s : state_t) : integer = s._2;
     
     type trigger_t = {
-        boolean    // SelfTrigger_act
+        boolean,    // TwoFeedback_b
+        boolean    // TwoFeedback_a
     };
     // Trigger presence projection macros
-    define SelfTrigger_act_is_present(t : trigger_t) : boolean = t._1;
+    define TwoFeedback_b_is_present(t : trigger_t) : boolean = t._1;
+    define TwoFeedback_a_is_present(t : trigger_t) : boolean = t._2;
     
     /********************
      * Trace Definition *
@@ -144,7 +148,7 @@ module main {
     if (i == 5) then tr._6 else (
     if (i == 6) then tr._7 else (
     if (i == 7) then tr._8 else (
-    { NULL, inf(), { 0 }, { false } } ))))))));
+    { NULL, inf(), { 0, 0 }, { false, false } } ))))))));
     
     define elem(i : step_t) : event_t
     = get(trace, i);
@@ -213,19 +217,35 @@ module main {
     * Connections and Actions *
     ***************************/
     
-    // If SelfTrigger_act is present, then there exists a SelfTrigger_reaction_0
+    // If TwoFeedback_b is present, then there exists a TwoFeedback_reaction_0
     // that scheduled it.
     axiom(forall (i : integer) :: (i > START && i <= END) ==> ( true
-        // If SelfTrigger_act is present, there exists an SelfTrigger_reaction_0.
+        // If TwoFeedback_b is present, there exists an TwoFeedback_reaction_0.
         // This additional term establishes a one-to-one relationship in timing.
-        && (SelfTrigger_act_is_present(t(i)) ==> (
+        && (TwoFeedback_b_is_present(t(i)) ==> (
             exists (j : integer) :: j >= START && j < i
-            && rxn(j) == SelfTrigger_reaction_0
+            && rxn(j) == TwoFeedback_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(2000000000))
+        ))
+        // If TwoFeedback_b is not present, then value stays the same.
+        && (!TwoFeedback_b_is_present(t(i)) ==> (
+            TwoFeedback_b(s(i)) == TwoFeedback_b(s(i-1))
+        ))
+    ));
+    
+    // If TwoFeedback_a is present, then there exists a TwoFeedback_reaction_0
+    // that scheduled it.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ( true
+        // If TwoFeedback_a is present, there exists an TwoFeedback_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (TwoFeedback_a_is_present(t(i)) ==> (
+            exists (j : integer) :: j >= START && j < i
+            && rxn(j) == TwoFeedback_reaction_0
             && g(i) == tag_schedule(g(j), nsec(1000000000))
         ))
-        // If SelfTrigger_act is not present, then value stays the same.
-        && (!SelfTrigger_act_is_present(t(i)) ==> (
-            SelfTrigger_act(s(i)) == SelfTrigger_act(s(i-1))
+        // If TwoFeedback_a is not present, then value stays the same.
+        && (!TwoFeedback_a_is_present(t(i)) ==> (
+            TwoFeedback_a(s(i)) == TwoFeedback_a(s(i-1))
         ))
     ));
     
@@ -233,19 +253,20 @@ module main {
     * Reactions and Their Triggers *
     ********************************/
     
-    // SelfTrigger.reaction_0 is invoked when any of it triggers are present.
+    // TwoFeedback.reaction_0 is invoked when any of it triggers are present.
     axiom(forall (i : integer) :: (i > START && i <= END) ==> ((
         false
         || g(i) == zero()
-        || SelfTrigger_act_is_present(t(i))
-    ) <==> (rxn(i) == SelfTrigger_reaction_0)));
+        || TwoFeedback_b_is_present(t(i))
+        || TwoFeedback_a_is_present(t(i))
+    ) <==> (rxn(i) == TwoFeedback_reaction_0)));
     
     /**********************
     * Startup & Shutdown *
     **********************/         
     
-    // SelfTrigger.reaction_0 is triggered by startup.
-    axiom(startup_triggers(SelfTrigger_reaction_0));
+    // TwoFeedback.reaction_0 is triggered by startup.
+    axiom(startup_triggers(TwoFeedback_reaction_0));
     
     /*********************
      * Initial Condition *
@@ -255,8 +276,10 @@ module main {
     = start == 0
         && rxn(0) == NULL
         && g(0) == {0, 0}
-        && SelfTrigger_act(s(0)) == 0
-        && !SelfTrigger_act_is_present(t(0))
+        && TwoFeedback_b(s(0)) == 0
+        && TwoFeedback_a(s(0)) == 0
+        && !TwoFeedback_b_is_present(t(0))
+        && !TwoFeedback_a_is_present(t(0))
         ;
         
     /*********************
@@ -267,13 +290,16 @@ module main {
     * Reaction Contracts *
     **********************/
     
-    /* Pre/post conditions for SelfTrigger.reaction_0 */
+    /* Pre/post conditions for TwoFeedback.reaction_0 */
     axiom(forall (i : integer) :: (i >= START && i <= END) ==>
-        (rxn(i) == SelfTrigger_reaction_0 ==> ( true
-        //// Line 13 in the LF program
-        && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && SelfTrigger_act_is_present(t(i0)) && SelfTrigger_act(s(i0)) == -1 && g(i0) == tag_schedule(g(i), nsec(1000000000))))
+        (rxn(i) == TwoFeedback_reaction_0 ==> ( true
+        //// Line 28 in the LF program
+        && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && TwoFeedback_a_is_present(t(i0)) && TwoFeedback_a(s(i0)) == -1 && g(i0) == tag_schedule(g(i), nsec(1000000000))))
         || (
-            !(exists (x0 : integer) :: x0 > i && x0 < END && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), nsec(1000000000))) || tag_later(g(x0), tag_schedule(g(i), nsec(1000000000)))))
+            !(exists (x0 : integer) :: x0 > i && x0 <= END && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), nsec(1000000000))) || tag_later(g(x0), tag_schedule(g(i), nsec(1000000000)))))
+        ))))&&(((((i < END) ==> (exists (i0 : integer) :: i0 > i && TwoFeedback_b_is_present(t(i0)) && TwoFeedback_b(s(i0)) == -1 && g(i0) == tag_schedule(g(i), nsec(2000000000))))
+        || (
+            !(exists (x0 : integer) :: x0 > i && x0 <= END && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), nsec(2000000000))) || tag_later(g(x0), tag_schedule(g(i), nsec(2000000000)))))
         )))))))
     )));
     
@@ -287,7 +313,7 @@ module main {
     // The FOL property translated from user-defined LTL property
     define P(i : step_t) : boolean =
         true
-        //// Line 8 in the LF program
+        //// Line 19 in the LF program
         && ((((((false))))))
     ;
     
@@ -310,7 +336,7 @@ module main {
      * K-Induction *
      ***************/
     axiom(start == 0);
-    property test : !(rxn(3) == SelfTrigger_reaction_0);
+    property test : !(rxn(3) == TwoFeedback_reaction_0);
     
     control {
         v = bmc(0);

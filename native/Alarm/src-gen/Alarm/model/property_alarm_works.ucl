@@ -54,14 +54,19 @@ module main {
         || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
         || (!isInf(t1) && isInf(t2));
     
-    // Tag algebra
+    // mstep() produces a mstep delay. zero() produces no delay.
     define tag_schedule(t : tag_t, i : interval_t) : tag_t
-    = if (!isInf(t) && pi1(i) == 0 && !isInf(i))
+    = if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 1)
         then { pi1(t), pi2(t) + 1 } // microstep delay
-        else ( if (!isInf(t) && pi1(i) > 0 && !isInf(i))
-            then { pi1(t) + pi1(i), 0 }
-            else inf());
+        else ( if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 0)
+                then t // no delay
+                else (
+                    if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+                    then { pi1(t) + pi1(i), 0 }
+                    else inf()
+                ));
     
+    // Deprecated.
     define tag_delay(t : tag_t, i : interval_t) : tag_t
     = if (!isInf(t) && !isInf(i))
         then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
@@ -86,31 +91,42 @@ module main {
         NULL
     };
     type state_t = {
-        integer, 	// Alarm.r.err
-        integer, 	// Alarm.r.in
-        integer 	// Alarm.r.out
+        integer,    // Alarm_r_in
+        integer,    // Alarm_r_out
+        integer,    // Alarm_r_setAlarm
+        integer    // Alarm_r_err
     };
     // State variable projection macros
-    define Alarm_r_err(s : state_t) : integer = s._1;
-    define Alarm_r_in(s : state_t) : integer = s._2;
-    define Alarm_r_out(s : state_t) : integer = s._3;
+    define Alarm_r_in(s : state_t) : integer = s._1;
+    define Alarm_r_out(s : state_t) : integer = s._2;
+    define Alarm_r_setAlarm(s : state_t) : integer = s._3;
+    define Alarm_r_err(s : state_t) : integer = s._4;
     
-    //////////////////////////
+    type trigger_t = {
+        boolean,    // Alarm_r_in
+        boolean,    // Alarm_r_out
+        boolean    // Alarm_r_setAlarm
+    };
+    // Trigger presence projection macros
+    define Alarm_r_in_is_present(t : trigger_t) : boolean = t._1;
+    define Alarm_r_out_is_present(t : trigger_t) : boolean = t._2;
+    define Alarm_r_setAlarm_is_present(t : trigger_t) : boolean = t._3;
     
     /********************
      * Trace Definition *
      *******************/
     const START : integer = 0;
-    const END : integer = 2;
+    const END : integer = 3;
     
     define in_range(num : integer) : boolean
     = num >= START && num <= END;
     
     type step_t = integer;
-    type event_t = { rxn_t, tag_t, state_t };
+    type event_t = { rxn_t, tag_t, state_t, trigger_t };
     
-    // Create a bounded trace of 3 events.
+    // Create a bounded trace of 4 events.
     type trace_t = {
+        event_t,
         event_t,
         event_t,
         event_t
@@ -130,26 +146,22 @@ module main {
     if (i == 0) then tr._1 else (
     if (i == 1) then tr._2 else (
     if (i == 2) then tr._3 else (
-    { NULL, inf(), { 0, 0, 0 } } )));
+    if (i == 3) then tr._4 else (
+    { NULL, inf(), { 0, 0, 0, 0 }, { false, false, false } } ))));
     
     define elem(i : step_t) : event_t
     = get(trace, i);
     
     // projection macros
-    define rxn      (i : step_t) : rxn_t    = elem(i)._1;
-    define g        (i : step_t) : tag_t    = elem(i)._2;
-    define s        (i : step_t) : state_t  = elem(i)._3;
-    define isNULL   (i : step_t) : boolean  = rxn(i) == NULL;
+    define rxn      (i : step_t) : rxn_t        = elem(i)._1;
+    define g        (i : step_t) : tag_t        = elem(i)._2;
+    define s        (i : step_t) : state_t      = elem(i)._3;
+    define t        (i : step_t) : trigger_t    = elem(i)._4;
+    define isNULL   (i : step_t) : boolean      = rxn(i) == NULL;
     
     /***************************
     * Topological Abstraction *
     ***************************/
-    // Delay macro
-    define delay(r1, r2 : rxn_t) : interval_t =
-        if (r1 == Alarm_r_reaction_0 && r2 == Alarm_r_reaction_1) then nsec(2000000000) else (
-        inf()
-        );
-    
     // Non-federated "happened-before"
     define hb(e1, e2 : event_t) : boolean
     = tag_earlier(e1._2, e2._2)
@@ -158,32 +170,9 @@ module main {
             ));
     
     define startup_triggers(n : rxn_t) : boolean
-    = // if startup is within frame, put the events in the trace.
+    =   // if startup is within frame, put the events in the trace.
         ((start == 0) ==> (exists (i : integer) :: in_range(i)
-            && rxn(i) == n && tag_same(g(i), zero())))
-        // Can ONLY be triggered at (0,0).
-        // FIXME: this case seems to be taken care of by an axiom below.
-        && !(exists (j : integer) :: in_range(j) && rxn(j) == n
-            && !tag_same(g(j), zero()));
-    
-    // Note: The current formulation of "triggers" precludes
-    //       partial reaction triggering chain.
-    // This includes the possibility that upstream does NOT output.
-    define triggers_via_logical_action
-        (upstream, downstream : rxn_t, delay : interval_t) : boolean
-    = forall (i : integer) :: in_range(i)
-        ==> (rxn(i) == downstream 
-            ==> (exists (j : integer) :: in_range(j)
-                && rxn(j) == upstream 
-                && g(i) == tag_schedule(g(j), delay)));
-    
-    define triggers_via_logical_connection
-        (upstream, downstream : rxn_t, delay : interval_t) : boolean
-    = forall (i : integer) :: in_range(i)
-        ==> (rxn(i) == downstream 
-            ==> (exists (j : integer) :: in_range(j)
-                && rxn(j) == upstream 
-                && g(i) == tag_delay(g(j), delay)));
+            && rxn(i) == n && tag_same(g(i), zero())));
     
     //// Encoding the behavior of timers
     define is_multiple_of(a, b : integer) : boolean
@@ -269,17 +258,45 @@ module main {
         (rxn(j) == NULL) ==> (s(j) == s(j-1))
     ));
     
-    /***************
-    * Connections *
-    ***************/
+    /***************************
+    * Connections and Actions *
+    ***************************/
     
-    /********************
-    * Program Topology *
-    ********************/         
+    // If Alarm_r_setAlarm is present, then there exists a Alarm_r_reaction_0
+    // that scheduled it.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ( true
+        // If Alarm_r_setAlarm is present, there exists an Alarm_r_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (Alarm_r_setAlarm_is_present(t(i)) ==> (
+            exists (j : integer) :: j >= START && j < i
+            && rxn(j) == Alarm_r_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(2000000000))
+        ))
+        // If Alarm_r_setAlarm is not present, then value stays the same.
+        && (!Alarm_r_setAlarm_is_present(t(i)) ==> (
+            Alarm_r_setAlarm(s(i)) == Alarm_r_setAlarm(s(i-1))
+        ))
+    ));
     
-    // Alarm.r.reaction_0 triggers Alarm.r.reaction_1 via a logical action.
-    axiom(triggers_via_logical_action(Alarm_r_reaction_0, Alarm_r_reaction_1,
-        delay(Alarm_r_reaction_0, Alarm_r_reaction_1)));
+    /********************************
+    * Reactions and Their Triggers *
+    ********************************/
+    
+    // Alarm.r.reaction_0 is invoked when any of it triggers are present.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ((
+        false
+        || Alarm_r_in_is_present(t(i))
+    ) <==> (rxn(i) == Alarm_r_reaction_0)));
+    
+    // Alarm.r.reaction_1 is invoked when any of it triggers are present.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ((
+        false
+        || Alarm_r_setAlarm_is_present(t(i))
+    ) <==> (rxn(i) == Alarm_r_reaction_1)));
+    
+    /**********************
+    * Startup & Shutdown *
+    **********************/         
     
     /*********************
      * Initial Condition *
@@ -289,9 +306,10 @@ module main {
     = start == 0
         && rxn(0) == NULL
         && g(0) == {0, 0}
-        && Alarm_r_err(s(0)) == 0
         && Alarm_r_in(s(0)) == 0
         && Alarm_r_out(s(0)) == 0
+        && Alarm_r_setAlarm(s(0)) == 0
+        && Alarm_r_err(s(0)) == 0
         ;
         
     /*********************
@@ -303,29 +321,34 @@ module main {
     **********************/
     
     /* Pre/post conditions for Alarm.r.reaction_0 */
-    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+    axiom(forall (i : integer) :: (i >= START && i <= END) ==>
         (rxn(i) == Alarm_r_reaction_0 ==> ( true
-        //// Line 17 in the LF program
-        && ((((((((((((((((Alarm_r_err(s(i)))) == (1)))))))))) ==> (((exists (i0 : integer) :: i0 >= i && i0 <= (i + N) && ((((((rxn(i0) == Alarm_r_reaction_1))) && (((tag_same(g(i0), tag_schedule(g(i), nsec(2000000000)))))))))))))) && (((((((((((((Alarm_r_err(s(i)))) == (0)))))))))) ==> (((((((((((Alarm_r_out(s(i)))) == (1)))))))))))))))
+        //// Line 19 in the LF program
+        && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && Alarm_r_setAlarm_is_present(t(i0)) && Alarm_r_setAlarm(s(i0)) == 0 && g(i0) == tag_schedule(g(i), nsec(2000000000))))))))))
+        && Alarm_r_err(s(i)) == Alarm_r_err(s(i-1))
+        && !Alarm_r_out_is_present(t(i))
     )));
     
     /* Pre/post conditions for Alarm.r.reaction_1 */
-    axiom(forall (i : integer) :: (i > START && i <= END) ==>
+    axiom(forall (i : integer) :: (i >= START && i <= END) ==>
         (rxn(i) == Alarm_r_reaction_1 ==> ( true
+        && Alarm_r_err(s(i)) == Alarm_r_err(s(i-1))
+        && !Alarm_r_in_is_present(t(i))
+        && !Alarm_r_out_is_present(t(i))
     )));
     
     /************
     * Property *
     ************/
     // trace length = k + N
-    const k : integer = 1;       // Induction steps
+    const k : integer = 2;       // Induction steps
     const N : integer = 2;   // The property bound
     
     // The FOL property translated from user-defined LTL property
     define P(i : step_t) : boolean =
         true
-        //// Line 37 in the LF program
-        && ((((((((((rxn(i) == Alarm_r_reaction_0))) && (((((((((Alarm_r_err(s(i)))) == (1)))))))))))))) ==> (((exists (i0 : integer) :: i0 >= i && i0 <= (i + N) && ((((((rxn(i0) == Alarm_r_reaction_1))) && (((tag_earlier(g(i0), tag_schedule(g(i), nsec(5000000000)))))))))))))
+        //// Line 42 in the LF program
+        && ((((((rxn(i) == Alarm_r_reaction_0))))) ==> (((exists (i0 : integer) :: i0 >= i && i0 <= (i + N) && ((((((rxn(i0) == Alarm_r_reaction_1)))&&(((tag_earlier(g(i0), tag_schedule(g(i), nsec(1000000000)))))))))))))
     ;
     
     // Auxiliary invariant

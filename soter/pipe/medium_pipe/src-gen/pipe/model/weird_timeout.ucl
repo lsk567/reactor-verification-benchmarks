@@ -93,40 +93,40 @@ module main {
         NULL
     };
     type state_t = {
-        integer,    // pipe_source_out
         integer,    // pipe_node_1_out
-        integer,    // pipe_sink_in
         integer,    // pipe_node_1_in
-        integer,    // pipe_source__timer
+        integer,    // pipe_sink_in
+        integer,    // pipe_source_out
         integer,    // pipe_node_1_send_output
+        integer,    // pipe_source__timer
         integer,    // pipe_node_1_count
         integer    // pipe_node_1_payload
     };
     // State variable projection macros
-    define pipe_source_out(s : state_t) : integer = s._1;
-    define pipe_node_1_out(s : state_t) : integer = s._2;
+    define pipe_node_1_out(s : state_t) : integer = s._1;
+    define pipe_node_1_in(s : state_t) : integer = s._2;
     define pipe_sink_in(s : state_t) : integer = s._3;
-    define pipe_node_1_in(s : state_t) : integer = s._4;
-    define pipe_source__timer(s : state_t) : integer = s._5;
-    define pipe_node_1_send_output(s : state_t) : integer = s._6;
+    define pipe_source_out(s : state_t) : integer = s._4;
+    define pipe_node_1_send_output(s : state_t) : integer = s._5;
+    define pipe_source__timer(s : state_t) : integer = s._6;
     define pipe_node_1_count(s : state_t) : integer = s._7;
     define pipe_node_1_payload(s : state_t) : integer = s._8;
     
     type trigger_t = {
-        boolean,    // pipe_source_out
         boolean,    // pipe_node_1_out
-        boolean,    // pipe_sink_in
         boolean,    // pipe_node_1_in
-        boolean,    // pipe_source__timer
-        boolean    // pipe_node_1_send_output
+        boolean,    // pipe_sink_in
+        boolean,    // pipe_source_out
+        boolean,    // pipe_node_1_send_output
+        boolean    // pipe_source__timer
     };
     // Trigger presence projection macros
-    define pipe_source_out_is_present(t : trigger_t) : boolean = t._1;
-    define pipe_node_1_out_is_present(t : trigger_t) : boolean = t._2;
+    define pipe_node_1_out_is_present(t : trigger_t) : boolean = t._1;
+    define pipe_node_1_in_is_present(t : trigger_t) : boolean = t._2;
     define pipe_sink_in_is_present(t : trigger_t) : boolean = t._3;
-    define pipe_node_1_in_is_present(t : trigger_t) : boolean = t._4;
-    define pipe_source__timer_is_present(t : trigger_t) : boolean = t._5;
-    define pipe_node_1_send_output_is_present(t : trigger_t) : boolean = t._6;
+    define pipe_source_out_is_present(t : trigger_t) : boolean = t._4;
+    define pipe_node_1_send_output_is_present(t : trigger_t) : boolean = t._5;
+    define pipe_source__timer_is_present(t : trigger_t) : boolean = t._6;
     
     /********************
      * Trace Definition *
@@ -270,9 +270,7 @@ module main {
             && pipe_node_1_in(s(j)) == pipe_source_out(s(i))
             && g(j) == tag_schedule(g(i), nsec(1000000000))
         )||(
-        !(exists (k : integer) :: k > i && k <= END && rxn(k) == NULL 
-            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_later(g(k), tag_schedule(g(i), nsec(1000000000))))
-        )
+        !(exists (k : integer) :: k > i && rxn(k) == NULL && (tag_same(g(k), tag_schedule(g(i),nsec(1000000000))) || tag_later(g(k), tag_schedule(g(i),nsec(1000000000)))))
         )
         ))
         // If pipe_node_1_in is present, there exists an pipe_source_out.
@@ -314,9 +312,7 @@ module main {
             && pipe_sink_in(s(j)) == pipe_node_1_out(s(i))
             && g(j) == tag_schedule(g(i), zero())
         )||(
-        !(exists (k : integer) :: k > i && k <= END && rxn(k) == NULL 
-            && (tag_same(g(k), tag_schedule(g(i), zero())) || tag_later(g(k), tag_schedule(g(i), zero())))
-        )
+        !(exists (k : integer) :: k > i && rxn(k) == NULL && (tag_same(g(k), tag_schedule(g(i),zero())) || tag_later(g(k), tag_schedule(g(i),zero()))))
         )
         ))
         // If pipe_sink_in is present, there exists an pipe_node_1_out.
@@ -376,20 +372,14 @@ module main {
     = start == 0
         && rxn(0) == NULL
         && g(0) == {0, 0}
-        && pipe_source_out(s(0)) == 0
         && pipe_node_1_out(s(0)) == 0
-        && pipe_sink_in(s(0)) == 0
         && pipe_node_1_in(s(0)) == 0
-        && pipe_source__timer(s(0)) == 0
+        && pipe_sink_in(s(0)) == 0
+        && pipe_source_out(s(0)) == 0
         && pipe_node_1_send_output(s(0)) == 0
+        && pipe_source__timer(s(0)) == 0
         && pipe_node_1_count(s(0)) == 0
         && pipe_node_1_payload(s(0)) == 0
-        && !pipe_source_out_is_present(t(0))
-        && !pipe_node_1_out_is_present(t(0))
-        && !pipe_sink_in_is_present(t(0))
-        && !pipe_node_1_in_is_present(t(0))
-        && !pipe_source__timer_is_present(t(0))
-        && !pipe_node_1_send_output_is_present(t(0))
         ;
         
     /*********************
@@ -408,13 +398,14 @@ module main {
         //// Line 25 in the LF program
         && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && pipe_source__timer_is_present(t(i0)) && pipe_source__timer(s(i0)) == 0 && g(i0) == tag_schedule(g(i), nsec(900000000))))
         || (
-            !(exists (x0 : integer) :: x0 > i && x0 <= END && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), nsec(900000000))) || tag_later(g(x0), tag_schedule(g(i), nsec(900000000)))))
+            !(exists (x0 : integer) :: x0 > i && pipe_source__timer_is_present(t(x0)))
+            && !(exists (y0 : integer) :: y0 > i && y0 <= END && !pipe_source__timer_is_present(t(y0)) && tag_later(g(y0), tag_schedule(g(i), nsec(900000000))))
         )))))))
         && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
         && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
         && !pipe_node_1_out_is_present(t(i))
-        && !pipe_sink_in_is_present(t(i))
         && !pipe_node_1_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
         && !pipe_node_1_send_output_is_present(t(i))
     )));
     
@@ -423,11 +414,11 @@ module main {
         (rxn(i) == pipe_sink_reaction_0 ==> ( true
         && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
         && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
-        && !pipe_source_out_is_present(t(i))
         && !pipe_node_1_out_is_present(t(i))
         && !pipe_node_1_in_is_present(t(i))
-        && !pipe_source__timer_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
         && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
     )));
     
     /* Pre/post conditions for pipe.node_1.reaction_1 */
@@ -435,30 +426,23 @@ module main {
         (rxn(i) == pipe_node_1_reaction_1 ==> ( true
         //// Line 58 in the LF program
         && ((((((pipe_node_1_out_is_present(t(i)) && pipe_node_1_out(s(i)) == 1))))))
-        //// Line 59 in the LF program
-        && ((((((((pipe_node_1_count(s(i))))== (((((((pipe_node_1_count(s(i-1))))))-(((1))))))))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
         && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
-        && !pipe_source_out_is_present(t(i))
-        && !pipe_sink_in_is_present(t(i))
         && !pipe_node_1_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
         && !pipe_source__timer_is_present(t(i))
     )));
     
     /* Pre/post conditions for pipe.node_1.reaction_0 */
     axiom(forall (i : integer) :: (i >= START && i <= END) ==>
         (rxn(i) == pipe_node_1_reaction_0 ==> ( true
-        //// Line 49 in the LF program
-        && ((((((((pipe_node_1_payload(s(i))))== ((pipe_node_1_in(s(i))))))))))
-        //// Line 50 in the LF program
-        && ((((((((pipe_node_1_count(s(i))))== (((((((pipe_node_1_count(s(i-1)))))))+((((1))))))))))))
-        //// Line 51 in the LF program
-        && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && pipe_node_1_send_output_is_present(t(i0)) && pipe_node_1_send_output(s(i0)) == 0 && g(i0) == tag_schedule(g(i), mstep())))
-        || (
-            !(exists (x0 : integer) :: x0 > i && x0 <= END && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), zero())) || tag_later(g(x0), tag_schedule(g(i), zero()))))
-        )))))))
-        && !pipe_source_out_is_present(t(i))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
         && !pipe_node_1_out_is_present(t(i))
         && !pipe_sink_in_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
         && !pipe_source__timer_is_present(t(i))
     )));
     
@@ -494,8 +478,13 @@ module main {
     /***************
      * K-Induction *
      ***************/
-    axiom(start == 0);
-    property test : rxn(END) == NULL;
+    // Initiation
+    property initiation_count : initial_condition() ==>
+        Globally_Q(0, k);
+    
+    // Consecution
+    property consecution_count : 
+        Globally_Q(0, k) ==> Q(k+1);
     
     control {
         v = bmc(0);

@@ -1,7 +1,7 @@
 target C {
     verification: {
         engine: uclid,
-        induction: 1
+        induction: 2
     }
 };
 
@@ -11,11 +11,12 @@ reactor ReactorWithAlarm {
     output out:int;
     state err:int;
 
-    logical action setAlarm(2 sec);
+    logical action setAlarm(2 sec):int;
 
     //@label Computation
-    @inv([[err == 1] ==> F[reaction[2] /\ at(2 sec)]] 
-            /\ [[err == 0] ==> [out == 1]])
+    // @inv([[err == 1] ==> schedule(setAlarm, 0)] 
+    //         /\ [[err == 0] ==> set(out, 1)])
+    @inv(schedule(setAlarm, 0))
     reaction(in) -> out, setAlarm {=
         // If certain abnormal state occurs,
         // trigger the alarm.
@@ -34,9 +35,13 @@ reactor ReactorWithAlarm {
     =}
 }
 
+// @property("alarm_works",
+//     [r.reaction[1] /\ [r.err == 1]] 
+//         ==> F[r.reaction[2] /\ within(1 sec)])
+// @property("alarm_works", false)
 @property("alarm_works",
-    [r.reaction[1] /\ [r.err == 1]] 
-        ==> F[r.reaction[2] /\ within(5 sec)])
+    r.reaction[1] 
+        ==> F[r.reaction[2] /\ within(1 sec)])
 @bound("alarm_works", 2)
 main reactor {
     r =  new ReactorWithAlarm();

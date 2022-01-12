@@ -1,4 +1,7 @@
 /* 
+ * The output is not accurate.
+ * Could be an over-approximation.
+ *
  * The case of two recurrent actions triggering
  * a single reaction is currently unhandled.
  * The challenge is distinguishing which action
@@ -14,8 +17,8 @@ target C {
     }
 }
 
-// @property("test", false)
-// @bound("test", 5)
+@property("test", false)
+@bound("test", 5)
 main reactor {
     // Both actions have an obligation to produce
     // the next action, but there is only one slot.
@@ -23,8 +26,9 @@ main reactor {
     logical action a(1 sec):int;
     logical action b(2 sec):int;
 
-    // @inv(schedule(a, -1)
-    //     /\ schedule(b, -1)
-    // )
+    @inv(
+        schedule(a, -1)
+        /\ schedule(b, -1)
+    )
     reaction(startup, a, b) -> a, b {==}
 }

@@ -21,6 +21,7 @@ typedef struct {
 } reactorwithalarm_out_t;
 typedef struct {
     trigger_t* trigger;
+    int value;
     bool is_present;
     bool has_value;
     lf_token_t* token;
@@ -72,6 +73,9 @@ void reactorwithalarmreaction_function_1(void* instance_args) {
     setAlarm->is_present = (bool)self->_lf__setAlarm.status;
     setAlarm->has_value = ((self->_lf__setAlarm.token) != NULL && (self->_lf__setAlarm.token)->value != NULL);
     setAlarm->token = (self->_lf__setAlarm.token);
+    if (setAlarm->has_value) {
+        setAlarm->value = *(int*)(self->_lf__setAlarm.token)->value;
+    }
     #pragma GCC diagnostic pop
     // Trigger the alarm
         
@@ -98,7 +102,7 @@ reactorwithalarm_self_t* new_ReactorWithAlarm() {
     self->_lf__setAlarm.reactions = &self->_lf__setAlarm_reactions[0];
     self->_lf__setAlarm.number_of_reactions = 1;
     self->_lf__setAlarm.is_physical = false;
-    self->_lf__setAlarm.element_size = 0;
+    self->_lf__setAlarm.element_size = sizeof(int);
     self->_lf__in.last = NULL;
     self->_lf__in_reactions[0] = &self->_lf__reaction_0;
     self->_lf__in.reactions = &self->_lf__in_reactions[0];
@@ -183,7 +187,7 @@ void _lf_initialize_trigger_objects() {
     alarm_r_self->_lf_in_width = -2;
     alarm_r_self->_lf__setAlarm.offset = SEC(2);
     alarm_r_self->_lf__setAlarm.period = -1;
-    alarm_r_self->_lf__setAlarm.token = _lf_create_token(0);
+    alarm_r_self->_lf__setAlarm.token = _lf_create_token(sizeof(int));
     alarm_r_self->_lf__setAlarm.status = absent;
     _lf_tokens_with_ref_count[0].token
             = &alarm_r_self->_lf__setAlarm.token;

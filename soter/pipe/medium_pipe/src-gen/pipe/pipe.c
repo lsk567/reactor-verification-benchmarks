@@ -427,12 +427,12 @@ trigger_t* _lf_action_for_port(int port_id) {
 void _lf_initialize_trigger_objects() {
     // Initialize the _lf_clock
     lf_initialize_clock();
-    _lf_tokens_with_ref_count_size = 4;
-    _lf_tokens_with_ref_count = (token_present_t*)malloc(4 * sizeof(token_present_t));
+    _lf_tokens_with_ref_count_size = 3;
+    _lf_tokens_with_ref_count = (token_present_t*)malloc(3 * sizeof(token_present_t));
     // Create the array that will contain pointers to is_present fields to reset on each step.
-    _lf_is_present_fields_size = 8;
-    _lf_is_present_fields = (bool**)malloc(8 * sizeof(bool*));
-    _lf_is_present_fields_abbreviated = (bool**)malloc(8 * sizeof(bool*));
+    _lf_is_present_fields_size = 6;
+    _lf_is_present_fields = (bool**)malloc(6 * sizeof(bool*));
+    _lf_is_present_fields_abbreviated = (bool**)malloc(6 * sizeof(bool*));
     _lf_is_present_fields_abbreviated_size = 0;
     
     pipe_self_t* pipe_self = new_pipe();
@@ -442,7 +442,7 @@ void _lf_initialize_trigger_objects() {
     // width of -2 indicates that it is not a multiport.
     pipe_source_self->_lf_out_width = -2;
     _lf_startup_reactions[0] = &pipe_source_self->_lf__reaction_0;
-    pipe_source_self->_lf___timer.offset = SEC(1);
+    pipe_source_self->_lf___timer.offset = MSEC(900);
     pipe_source_self->_lf___timer.period = -1;
     pipe_source_self->_lf___timer.token = _lf_create_token(sizeof(int));
     pipe_source_self->_lf___timer.status = absent;
@@ -475,23 +475,6 @@ void _lf_initialize_trigger_objects() {
             = &pipe_node_1_self->_lf__send_output.status;
     _lf_tokens_with_ref_count[1].reset_is_present = true;
     //***** End initializing pipe.node_1
-    // ************* Instance pipe.node_2 of class Node
-    node_self_t* pipe_node_2_self = new_Node();
-    //***** Start initializing pipe.node_2
-    // width of -2 indicates that it is not a multiport.
-    pipe_node_2_self->_lf_out_width = -2;
-    // width of -2 indicates that it is not a multiport.
-    pipe_node_2_self->_lf_in_width = -2;
-    pipe_node_2_self->_lf__send_output.offset = 0;
-    pipe_node_2_self->_lf__send_output.period = -1;
-    pipe_node_2_self->_lf__send_output.token = _lf_create_token(sizeof(int));
-    pipe_node_2_self->_lf__send_output.status = absent;
-    _lf_tokens_with_ref_count[2].token
-            = &pipe_node_2_self->_lf__send_output.token;
-    _lf_tokens_with_ref_count[2].status
-            = &pipe_node_2_self->_lf__send_output.status;
-    _lf_tokens_with_ref_count[2].reset_is_present = true;
-    //***** End initializing pipe.node_2
     // ************* Instance pipe.delay of class _lf_GenDelay_197ef
     _lf_gendelay_197ef_self_t* pipe_delay_self = new__lf_GenDelay_197ef();
     //***** Start initializing pipe.delay
@@ -504,11 +487,11 @@ void _lf_initialize_trigger_objects() {
     pipe_delay_self->_lf__act.period = -1;
     pipe_delay_self->_lf__act.token = _lf_create_token(sizeof(int));
     pipe_delay_self->_lf__act.status = absent;
-    _lf_tokens_with_ref_count[3].token
+    _lf_tokens_with_ref_count[2].token
             = &pipe_delay_self->_lf__act.token;
-    _lf_tokens_with_ref_count[3].status
+    _lf_tokens_with_ref_count[2].status
             = &pipe_delay_self->_lf__act.status;
-    _lf_tokens_with_ref_count[3].reset_is_present = true;
+    _lf_tokens_with_ref_count[2].reset_is_present = true;
     //***** End initializing pipe.delay
     //***** End initializing pipe
     // Allocate memory.
@@ -542,8 +525,8 @@ void _lf_initialize_trigger_objects() {
             pipe_source_self->_lf__reaction_0.triggers[0 + i] = triggerArray;
         }
         // Fill the trigger array.
-        // Point to destination port pipe.node_1.in's trigger struct.
-        triggerArray[0] = &pipe_node_1_self->_lf__in;
+        // Point to destination port pipe.delay.inp's trigger struct.
+        triggerArray[0] = &pipe_delay_self->_lf__inp;
     }
     pipe_source_self->_lf_out.num_destinations = 1;
     // Total number of outputs (single ports and multiport channels) produced by the reaction.
@@ -559,7 +542,7 @@ void _lf_initialize_trigger_objects() {
     }
     // Initialize the output_produced array.
     // Reaction 0 of pipe.sink depends on one maximal upstream reaction.
-    pipe_sink_self->_lf__reaction_0.last_enabling_reaction = &(pipe_node_2_self->_lf__reaction_1);
+    pipe_sink_self->_lf__reaction_0.last_enabling_reaction = &(pipe_node_1_self->_lf__reaction_1);
     // Total number of outputs (single ports and multiport channels) produced by the reaction.
     pipe_node_1_self->_lf__reaction_0.num_outputs = 0;
     // Allocate arrays for triggering downstream reactions.
@@ -587,7 +570,7 @@ void _lf_initialize_trigger_objects() {
     pipe_node_1_self->_lf__reaction_1.output_produced[0]
     = &pipe_node_1_self->_lf_out.is_present;
     // Reaction 0 of pipe.node_1 depends on one maximal upstream reaction.
-    pipe_node_1_self->_lf__reaction_0.last_enabling_reaction = &(pipe_source_self->_lf__reaction_0);
+    pipe_node_1_self->_lf__reaction_0.last_enabling_reaction = &(pipe_delay_self->_lf__reaction_0);
     // Reaction 1 of pipe.node_1 depends on one maximal upstream reaction.
     pipe_node_1_self->_lf__reaction_1.last_enabling_reaction = &(pipe_node_1_self->_lf__reaction_0);
     for (int i = 0; i < 1; i++) {
@@ -603,57 +586,10 @@ void _lf_initialize_trigger_objects() {
             pipe_node_1_self->_lf__reaction_1.triggers[0 + i] = triggerArray;
         }
         // Fill the trigger array.
-        // Point to destination port pipe.delay.inp's trigger struct.
-        triggerArray[0] = &pipe_delay_self->_lf__inp;
-    }
-    pipe_node_1_self->_lf_out.num_destinations = 1;
-    // Total number of outputs (single ports and multiport channels) produced by the reaction.
-    pipe_node_2_self->_lf__reaction_0.num_outputs = 0;
-    // Allocate arrays for triggering downstream reactions.
-    if (pipe_node_2_self->_lf__reaction_0.num_outputs > 0) {
-        pipe_node_2_self->_lf__reaction_0.output_produced 
-                = (bool**)malloc(sizeof(bool*) * pipe_node_2_self->_lf__reaction_0.num_outputs);
-        pipe_node_2_self->_lf__reaction_0.triggers 
-                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_node_2_self->_lf__reaction_0.num_outputs);
-        pipe_node_2_self->_lf__reaction_0.triggered_sizes 
-                = (int*)calloc(pipe_node_2_self->_lf__reaction_0.num_outputs, sizeof(int));
-    }
-    // Initialize the output_produced array.
-    // Total number of outputs (single ports and multiport channels) produced by the reaction.
-    pipe_node_2_self->_lf__reaction_1.num_outputs = 1;
-    // Allocate arrays for triggering downstream reactions.
-    if (pipe_node_2_self->_lf__reaction_1.num_outputs > 0) {
-        pipe_node_2_self->_lf__reaction_1.output_produced 
-                = (bool**)malloc(sizeof(bool*) * pipe_node_2_self->_lf__reaction_1.num_outputs);
-        pipe_node_2_self->_lf__reaction_1.triggers 
-                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_node_2_self->_lf__reaction_1.num_outputs);
-        pipe_node_2_self->_lf__reaction_1.triggered_sizes 
-                = (int*)calloc(pipe_node_2_self->_lf__reaction_1.num_outputs, sizeof(int));
-    }
-    // Initialize the output_produced array.
-    pipe_node_2_self->_lf__reaction_1.output_produced[0]
-    = &pipe_node_2_self->_lf_out.is_present;
-    // Reaction 0 of pipe.node_2 depends on one maximal upstream reaction.
-    pipe_node_2_self->_lf__reaction_0.last_enabling_reaction = &(pipe_delay_self->_lf__reaction_0);
-    // Reaction 1 of pipe.node_2 depends on one maximal upstream reaction.
-    pipe_node_2_self->_lf__reaction_1.last_enabling_reaction = &(pipe_node_2_self->_lf__reaction_0);
-    for (int i = 0; i < 1; i++) {
-        // Reaction 1 of pipe.node_2 triggers 0
-        // downstream reactions through port pipe.node_2.out[0 + i].
-        pipe_node_2_self->_lf__reaction_1.triggered_sizes[0 + i] = 1;
-    }
-    { // For scoping
-        // For reaction 1 of pipe.node_2, allocate an
-        // array of trigger pointers for downstream reactions through port pipe.node_2.out
-        trigger_t** triggerArray = (trigger_t**)malloc(1 * sizeof(trigger_t*));
-        for (int i = 0; i < 1; i++) {
-            pipe_node_2_self->_lf__reaction_1.triggers[0 + i] = triggerArray;
-        }
-        // Fill the trigger array.
         // Point to destination port pipe.sink.in's trigger struct.
         triggerArray[0] = &pipe_sink_self->_lf__in;
     }
-    pipe_node_2_self->_lf_out.num_destinations = 1;
+    pipe_node_1_self->_lf_out.num_destinations = 1;
     // Total number of outputs (single ports and multiport channels) produced by the reaction.
     pipe_delay_self->_lf__reaction_0.num_outputs = 1;
     // Allocate arrays for triggering downstream reactions.
@@ -695,8 +631,8 @@ void _lf_initialize_trigger_objects() {
             pipe_delay_self->_lf__reaction_0.triggers[0 + i] = triggerArray;
         }
         // Fill the trigger array.
-        // Point to destination port pipe.node_2.in's trigger struct.
-        triggerArray[0] = &pipe_node_2_self->_lf__in;
+        // Point to destination port pipe.node_1.in's trigger struct.
+        triggerArray[0] = &pipe_node_1_self->_lf__in;
     }
     // Reaction 1 of pipe.delay does not depend on one maximal upstream reaction.
     pipe_delay_self->_lf__reaction_1.last_enabling_reaction = NULL;
@@ -706,20 +642,16 @@ void _lf_initialize_trigger_objects() {
     // Connect inputs and outputs for reactor pipe.source.
     // END Connect inputs and outputs for reactor pipe.source.
     // Connect inputs and outputs for reactor pipe.sink.
-    // Connect pipe.node_2.out to port pipe.sink.in
-    pipe_sink_self->_lf_in = (sink_in_t*)&pipe_node_2_self->_lf_out;
+    // Connect pipe.node_1.out to port pipe.sink.in
+    pipe_sink_self->_lf_in = (sink_in_t*)&pipe_node_1_self->_lf_out;
     // END Connect inputs and outputs for reactor pipe.sink.
     // Connect inputs and outputs for reactor pipe.node_1.
-    // Connect pipe.source.out to port pipe.node_1.in
-    pipe_node_1_self->_lf_in = (node_in_t*)&pipe_source_self->_lf_out;
+    // Connect pipe.delay.out to port pipe.node_1.in
+    pipe_node_1_self->_lf_in = (node_in_t*)&pipe_delay_self->_lf_out;
     // END Connect inputs and outputs for reactor pipe.node_1.
-    // Connect inputs and outputs for reactor pipe.node_2.
-    // Connect pipe.delay.out to port pipe.node_2.in
-    pipe_node_2_self->_lf_in = (node_in_t*)&pipe_delay_self->_lf_out;
-    // END Connect inputs and outputs for reactor pipe.node_2.
     // Connect inputs and outputs for reactor pipe.delay.
-    // Connect pipe.node_1.out to port pipe.delay.inp
-    pipe_delay_self->_lf_inp = (_lf_gendelay_197ef_inp_t*)&pipe_node_1_self->_lf_out;
+    // Connect pipe.source.out to port pipe.delay.inp
+    pipe_delay_self->_lf_inp = (_lf_gendelay_197ef_inp_t*)&pipe_source_self->_lf_out;
     // END Connect inputs and outputs for reactor pipe.delay.
     // END Connect inputs and outputs for reactor pipe.
     // Add action pipe.source._timer to array of is_present fields.
@@ -728,20 +660,15 @@ void _lf_initialize_trigger_objects() {
     // Add action pipe.node_1.send_output to array of is_present fields.
     _lf_is_present_fields[1] 
             = &pipe_node_1_self->_lf_send_output.is_present;
-    // Add action pipe.node_2.send_output to array of is_present fields.
-    _lf_is_present_fields[2] 
-            = &pipe_node_2_self->_lf_send_output.is_present;
     // Add action pipe.delay.act to array of is_present fields.
-    _lf_is_present_fields[3] 
+    _lf_is_present_fields[2] 
             = &pipe_delay_self->_lf_act.is_present;
     // Add port pipe.source.out to array of is_present fields.
-    _lf_is_present_fields[4] = &pipe_source_self->_lf_out.is_present;
+    _lf_is_present_fields[3] = &pipe_source_self->_lf_out.is_present;
     // Add port pipe.node_1.out to array of is_present fields.
-    _lf_is_present_fields[5] = &pipe_node_1_self->_lf_out.is_present;
-    // Add port pipe.node_2.out to array of is_present fields.
-    _lf_is_present_fields[6] = &pipe_node_2_self->_lf_out.is_present;
+    _lf_is_present_fields[4] = &pipe_node_1_self->_lf_out.is_present;
     // Add port pipe.delay.out to array of is_present fields.
-    _lf_is_present_fields[7] = &pipe_delay_self->_lf_out.is_present;
+    _lf_is_present_fields[5] = &pipe_delay_self->_lf_out.is_present;
     pipe_source_self->_lf__reaction_0.chain_id = 1;
     // index is the OR of level 0 and 
     // deadline 140737488355327 shifted left 16 bits.
@@ -758,22 +685,14 @@ void _lf_initialize_trigger_objects() {
     // index is the OR of level 2 and 
     // deadline 140737488355327 shifted left 16 bits.
     pipe_node_1_self->_lf__reaction_1.index = 0x7fffffffffff0002LL;
-    pipe_node_2_self->_lf__reaction_0.chain_id = 1;
-    // index is the OR of level 1 and 
-    // deadline 140737488355327 shifted left 16 bits.
-    pipe_node_2_self->_lf__reaction_0.index = 0x7fffffffffff0001LL;
-    pipe_node_2_self->_lf__reaction_1.chain_id = 1;
-    // index is the OR of level 2 and 
-    // deadline 140737488355327 shifted left 16 bits.
-    pipe_node_2_self->_lf__reaction_1.index = 0x7fffffffffff0002LL;
     pipe_delay_self->_lf__reaction_0.chain_id = 1;
     // index is the OR of level 0 and 
     // deadline 140737488355327 shifted left 16 bits.
     pipe_delay_self->_lf__reaction_0.index = 0x7fffffffffff0000LL;
     pipe_delay_self->_lf__reaction_1.chain_id = 1;
-    // index is the OR of level 3 and 
+    // index is the OR of level 1 and 
     // deadline 140737488355327 shifted left 16 bits.
-    pipe_delay_self->_lf__reaction_1.index = 0x7fffffffffff0003LL;
+    pipe_delay_self->_lf__reaction_1.index = 0x7fffffffffff0001LL;
 }
 void _lf_trigger_startup_reactions() {
     

@@ -86,20 +86,29 @@ module main {
     // Application Specific
     // Reaction ids
     type rxn_t = enum {
-        SelfTrigger_reaction_0,
+        pipe_source_reaction_0,
+        pipe_sink_reaction_0,
         NULL
     };
     type state_t = {
-        integer    // SelfTrigger_act
+        integer,    // pipe_source_out
+        integer,    // pipe_sink_in
+        integer    // pipe_source__timer
     };
     // State variable projection macros
-    define SelfTrigger_act(s : state_t) : integer = s._1;
+    define pipe_source_out(s : state_t) : integer = s._1;
+    define pipe_sink_in(s : state_t) : integer = s._2;
+    define pipe_source__timer(s : state_t) : integer = s._3;
     
     type trigger_t = {
-        boolean    // SelfTrigger_act
+        boolean,    // pipe_source_out
+        boolean,    // pipe_sink_in
+        boolean    // pipe_source__timer
     };
     // Trigger presence projection macros
-    define SelfTrigger_act_is_present(t : trigger_t) : boolean = t._1;
+    define pipe_source_out_is_present(t : trigger_t) : boolean = t._1;
+    define pipe_sink_in_is_present(t : trigger_t) : boolean = t._2;
+    define pipe_source__timer_is_present(t : trigger_t) : boolean = t._3;
     
     /********************
      * Trace Definition *
@@ -144,7 +153,7 @@ module main {
     if (i == 5) then tr._6 else (
     if (i == 6) then tr._7 else (
     if (i == 7) then tr._8 else (
-    { NULL, inf(), { 0 }, { false } } ))))))));
+    { NULL, inf(), { 0, 0, 0 }, { false, false, false } } ))))))));
     
     define elem(i : step_t) : event_t
     = get(trace, i);
@@ -162,7 +171,9 @@ module main {
     // Non-federated "happened-before"
     define hb(e1, e2 : event_t) : boolean
     = tag_earlier(e1._2, e2._2)
-            ;
+            || (tag_same(e1._2, e2._2) && (
+            (e1._1 == pipe_source_reaction_0 && e2._1 == pipe_sink_reaction_0)
+            ));
     
     define startup_triggers(n : rxn_t) : boolean
     =   // if startup is within frame, put the events in the trace.
@@ -213,19 +224,53 @@ module main {
     * Connections and Actions *
     ***************************/
     
-    // If SelfTrigger_act is present, then there exists a SelfTrigger_reaction_0
+    // If pipe_source__timer is present, then there exists a pipe_source_reaction_0
     // that scheduled it.
     axiom(forall (i : integer) :: (i > START && i <= END) ==> ( true
-        // If SelfTrigger_act is present, there exists an SelfTrigger_reaction_0.
+        // If pipe_source__timer is present, there exists an pipe_source_reaction_0.
         // This additional term establishes a one-to-one relationship in timing.
-        && (SelfTrigger_act_is_present(t(i)) ==> (
+        && (pipe_source__timer_is_present(t(i)) ==> (
             exists (j : integer) :: j >= START && j < i
-            && rxn(j) == SelfTrigger_reaction_0
+            && rxn(j) == pipe_source_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(900000000))
+        ))
+        // If pipe_source__timer is not present, then value stays the same.
+        && (!pipe_source__timer_is_present(t(i)) ==> (
+            pipe_source__timer(s(i)) == pipe_source__timer(s(i-1))
+        ))
+    ));
+    
+    // Anomalies
+    // 1. (top-level) i < END
+    // 2. g(j) == tag_schedule(g(i), nsec(1000000000))
+    // 3. (L253) j > i blocks the solver.
+    // Ans: in_range() is important! Without it the solver blocks easily.
+    // 1. !(exists (k : integer) :: k > i && k <= END
+    //
+    // pipe_source_out -> pipe_sink_in
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> (
+        // If pipe_source_out is present then pipe_sink_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        ((pipe_source_out_is_present(t(i))) ==> (
+        ((
+            exists (j : integer) :: j > i && j <= END
+            && pipe_sink_in_is_present(t(j))
+            && pipe_sink_in(s(j)) == pipe_source_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        ))||(
+        !(exists (k : integer) :: k > i && k <= END && rxn(k) == NULL && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_later(g(k), tag_schedule(g(i), nsec(1000000000)))))
+        )
+        ))
+        // If pipe_sink_in is present, there exists an pipe_source_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_sink_in_is_present(t(i)) ==> (
+            exists (j : integer) :: j >= START && j < i
+            && pipe_source_out_is_present(t(j))
             && g(i) == tag_schedule(g(j), nsec(1000000000))
         ))
-        // If SelfTrigger_act is not present, then value stays the same.
-        && (!SelfTrigger_act_is_present(t(i)) ==> (
-            SelfTrigger_act(s(i)) == SelfTrigger_act(s(i-1))
+        // If pipe_sink_in is not present, then value stays the same.
+        && (!pipe_sink_in_is_present(t(i)) ==> (
+            pipe_sink_in(s(i)) == pipe_sink_in(s(i-1))
         ))
     ));
     
@@ -233,19 +278,25 @@ module main {
     * Reactions and Their Triggers *
     ********************************/
     
-    // SelfTrigger.reaction_0 is invoked when any of it triggers are present.
+    // pipe.source.reaction_0 is invoked when any of it triggers are present.
     axiom(forall (i : integer) :: (i > START && i <= END) ==> ((
         false
         || g(i) == zero()
-        || SelfTrigger_act_is_present(t(i))
-    ) <==> (rxn(i) == SelfTrigger_reaction_0)));
+        || pipe_source__timer_is_present(t(i))
+    ) <==> (rxn(i) == pipe_source_reaction_0)));
+    
+    // pipe.sink.reaction_0 is invoked when any of it triggers are present.
+    axiom(forall (i : integer) :: (i > START && i <= END) ==> ((
+        false
+        || pipe_sink_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_sink_reaction_0)));
     
     /**********************
     * Startup & Shutdown *
     **********************/         
     
-    // SelfTrigger.reaction_0 is triggered by startup.
-    axiom(startup_triggers(SelfTrigger_reaction_0));
+    // pipe.source.reaction_0 is triggered by startup.
+    axiom(startup_triggers(pipe_source_reaction_0));
     
     /*********************
      * Initial Condition *
@@ -255,8 +306,12 @@ module main {
     = start == 0
         && rxn(0) == NULL
         && g(0) == {0, 0}
-        && SelfTrigger_act(s(0)) == 0
-        && !SelfTrigger_act_is_present(t(0))
+        && pipe_source_out(s(0)) == 0
+        && pipe_sink_in(s(0)) == 0
+        && pipe_source__timer(s(0)) == 0
+        && !pipe_source_out_is_present(t(0))
+        && !pipe_sink_in_is_present(t(0))
+        && !pipe_source__timer_is_present(t(0))
         ;
         
     /*********************
@@ -267,14 +322,26 @@ module main {
     * Reaction Contracts *
     **********************/
     
-    /* Pre/post conditions for SelfTrigger.reaction_0 */
+    /* Pre/post conditions for pipe.source.reaction_0 */
     axiom(forall (i : integer) :: (i >= START && i <= END) ==>
-        (rxn(i) == SelfTrigger_reaction_0 ==> ( true
-        //// Line 13 in the LF program
-        && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && SelfTrigger_act_is_present(t(i0)) && SelfTrigger_act(s(i0)) == -1 && g(i0) == tag_schedule(g(i), nsec(1000000000))))
+        (rxn(i) == pipe_source_reaction_0 ==> ( true
+        //// Line 24 in the LF program
+        && ((((((
+            pipe_source_out_is_present(t(i)) && 
+            pipe_source_out(s(i)) == 1))))))
+        //// Line 25 in the LF program
+        && ((((((((i < END) ==> (exists (i0 : integer) :: i0 > i && pipe_source__timer_is_present(t(i0)) && pipe_source__timer(s(i0)) == 0 && g(i0) == tag_schedule(g(i), nsec(900000000))))
         || (
-            !(exists (x0 : integer) :: x0 > i && x0 < END && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), nsec(1000000000))) || tag_later(g(x0), tag_schedule(g(i), nsec(1000000000)))))
+            !(exists (x0 : integer) :: x0 > i && rxn(x0) == NULL && (tag_same(g(x0), tag_schedule(g(i), nsec(900000000))) || tag_later(g(x0), tag_schedule(g(i), nsec(900000000)))))
         )))))))
+        && !pipe_sink_in_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.sink.reaction_0 */
+    axiom(forall (i : integer) :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_sink_reaction_0 ==> ( true
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
     )));
     
     /************
@@ -287,7 +354,7 @@ module main {
     // The FOL property translated from user-defined LTL property
     define P(i : step_t) : boolean =
         true
-        //// Line 8 in the LF program
+        //// Line 66 in the LF program
         && ((((((false))))))
     ;
     
@@ -309,8 +376,13 @@ module main {
     /***************
      * K-Induction *
      ***************/
-    axiom(start == 0);
-    property test : !(rxn(3) == SelfTrigger_reaction_0);
+    // Initiation
+    property initiation_count : initial_condition() ==>
+        Globally_Q(0, k);
+    
+    // Consecution
+    property consecution_count : 
+        Globally_Q(0, k) ==> Q(k+1);
     
     control {
         v = bmc(0);

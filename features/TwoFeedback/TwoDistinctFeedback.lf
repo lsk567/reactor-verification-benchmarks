@@ -7,8 +7,8 @@ target C {
     }
 }
 
-// @property("test", false)
-// @bound("test", 5)
+@property("test", false)
+@bound("test", 5)
 main reactor {
     // Both actions have an obligation to produce
     // the next action, but there is only one slot.
@@ -16,9 +16,9 @@ main reactor {
     logical action a(1 sec):int;
     logical action b(2 sec):int;
 
-    // @inv(schedule(a, -1))
+    @inv(schedule(a, -1))
     reaction(startup, a) -> a {==}
     
-    // @inv(schedule(b, -1))
+    @inv(schedule(b, -1))
     reaction(startup, b) -> b {==}
 }
