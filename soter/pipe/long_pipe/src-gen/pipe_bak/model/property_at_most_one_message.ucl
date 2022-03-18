@@ -1,0 +1,1284 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // mstep() produces a mstep delay. zero() produces no delay.
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 1)
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 0)
+                then t // no delay
+                else (
+                    if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+                    then { pi1(t) + pi1(i), 0 }
+                    else inf()
+                ));
+    
+    // Deprecated.
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        pipe_source_reaction_0,
+        pipe_sink_reaction_0,
+        pipe_node_5_reaction_1,
+        pipe_node_1_reaction_0,
+        pipe_node_1_reaction_1,
+        pipe_node_2_reaction_0,
+        pipe_node_2_reaction_1,
+        pipe_node_3_reaction_0,
+        pipe_node_3_reaction_1,
+        pipe_node_4_reaction_0,
+        pipe_node_4_reaction_1,
+        pipe_node_5_reaction_0,
+        NULL
+    };
+    type state_t = {
+        integer,    // pipe_node_5_out
+        integer,    // pipe_node_1_out
+        integer,    // pipe_node_3_in
+        integer,    // pipe_sink_in
+        integer,    // pipe_node_1_in
+        integer,    // pipe_node_5_in
+        integer,    // pipe_node_2_in
+        integer,    // pipe_node_2_out
+        integer,    // pipe_node_3_out
+        integer,    // pipe_source_out
+        integer,    // pipe_node_4_in
+        integer,    // pipe_node_4_out
+        integer,    // pipe_node_5_send_output
+        integer,    // pipe_node_3_send_output
+        integer,    // pipe_node_1_send_output
+        integer,    // pipe_source__timer
+        integer,    // pipe_node_4_send_output
+        integer,    // pipe_node_2_send_output
+        integer,    // pipe_node_1_count
+        integer,    // pipe_node_1_payload
+        integer,    // pipe_node_2_count
+        integer,    // pipe_node_2_payload
+        integer,    // pipe_node_3_count
+        integer,    // pipe_node_3_payload
+        integer,    // pipe_node_4_count
+        integer,    // pipe_node_4_payload
+        integer,    // pipe_node_5_count
+        integer    // pipe_node_5_payload
+    };
+    // State variable projection macros
+    define pipe_node_5_out(s : state_t) : integer = s._1;
+    define pipe_node_1_out(s : state_t) : integer = s._2;
+    define pipe_node_3_in(s : state_t) : integer = s._3;
+    define pipe_sink_in(s : state_t) : integer = s._4;
+    define pipe_node_1_in(s : state_t) : integer = s._5;
+    define pipe_node_5_in(s : state_t) : integer = s._6;
+    define pipe_node_2_in(s : state_t) : integer = s._7;
+    define pipe_node_2_out(s : state_t) : integer = s._8;
+    define pipe_node_3_out(s : state_t) : integer = s._9;
+    define pipe_source_out(s : state_t) : integer = s._10;
+    define pipe_node_4_in(s : state_t) : integer = s._11;
+    define pipe_node_4_out(s : state_t) : integer = s._12;
+    define pipe_node_5_send_output(s : state_t) : integer = s._13;
+    define pipe_node_3_send_output(s : state_t) : integer = s._14;
+    define pipe_node_1_send_output(s : state_t) : integer = s._15;
+    define pipe_source__timer(s : state_t) : integer = s._16;
+    define pipe_node_4_send_output(s : state_t) : integer = s._17;
+    define pipe_node_2_send_output(s : state_t) : integer = s._18;
+    define pipe_node_1_count(s : state_t) : integer = s._19;
+    define pipe_node_1_payload(s : state_t) : integer = s._20;
+    define pipe_node_2_count(s : state_t) : integer = s._21;
+    define pipe_node_2_payload(s : state_t) : integer = s._22;
+    define pipe_node_3_count(s : state_t) : integer = s._23;
+    define pipe_node_3_payload(s : state_t) : integer = s._24;
+    define pipe_node_4_count(s : state_t) : integer = s._25;
+    define pipe_node_4_payload(s : state_t) : integer = s._26;
+    define pipe_node_5_count(s : state_t) : integer = s._27;
+    define pipe_node_5_payload(s : state_t) : integer = s._28;
+    
+    type trigger_t = {
+        boolean,    // pipe_node_5_out
+        boolean,    // pipe_node_1_out
+        boolean,    // pipe_node_3_in
+        boolean,    // pipe_sink_in
+        boolean,    // pipe_node_1_in
+        boolean,    // pipe_node_5_in
+        boolean,    // pipe_node_2_in
+        boolean,    // pipe_node_2_out
+        boolean,    // pipe_node_3_out
+        boolean,    // pipe_source_out
+        boolean,    // pipe_node_4_in
+        boolean,    // pipe_node_4_out
+        boolean,    // pipe_node_5_send_output
+        boolean,    // pipe_node_3_send_output
+        boolean,    // pipe_node_1_send_output
+        boolean,    // pipe_source__timer
+        boolean,    // pipe_node_4_send_output
+        boolean    // pipe_node_2_send_output
+    };
+    // Trigger presence projection macros
+    define pipe_node_5_out_is_present(t : trigger_t) : boolean = t._1;
+    define pipe_node_1_out_is_present(t : trigger_t) : boolean = t._2;
+    define pipe_node_3_in_is_present(t : trigger_t) : boolean = t._3;
+    define pipe_sink_in_is_present(t : trigger_t) : boolean = t._4;
+    define pipe_node_1_in_is_present(t : trigger_t) : boolean = t._5;
+    define pipe_node_5_in_is_present(t : trigger_t) : boolean = t._6;
+    define pipe_node_2_in_is_present(t : trigger_t) : boolean = t._7;
+    define pipe_node_2_out_is_present(t : trigger_t) : boolean = t._8;
+    define pipe_node_3_out_is_present(t : trigger_t) : boolean = t._9;
+    define pipe_source_out_is_present(t : trigger_t) : boolean = t._10;
+    define pipe_node_4_in_is_present(t : trigger_t) : boolean = t._11;
+    define pipe_node_4_out_is_present(t : trigger_t) : boolean = t._12;
+    define pipe_node_5_send_output_is_present(t : trigger_t) : boolean = t._13;
+    define pipe_node_3_send_output_is_present(t : trigger_t) : boolean = t._14;
+    define pipe_node_1_send_output_is_present(t : trigger_t) : boolean = t._15;
+    define pipe_source__timer_is_present(t : trigger_t) : boolean = t._16;
+    define pipe_node_4_send_output_is_present(t : trigger_t) : boolean = t._17;
+    define pipe_node_2_send_output_is_present(t : trigger_t) : boolean = t._18;
+    
+    /********************
+     * Trace Definition *
+     *******************/
+    const START : integer = 0;
+    const END : integer = 9;
+    group indices : integer = {
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+    };
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t, trigger_t };
+    
+    // Create a bounded trace of 10 events.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * Helper Macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    if (i == 3) then tr._4 else (
+    if (i == 4) then tr._5 else (
+    if (i == 5) then tr._6 else (
+    if (i == 6) then tr._7 else (
+    if (i == 7) then tr._8 else (
+    if (i == 8) then tr._9 else (
+    if (i == 9) then tr._10 else (
+    { NULL, inf(), { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false } } ))))))))));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t        = elem(i)._1;
+    define g        (i : step_t) : tag_t        = elem(i)._2;
+    define s        (i : step_t) : state_t      = elem(i)._3;
+    define t        (i : step_t) : trigger_t    = elem(i)._4;
+    define isNULL   (i : step_t) : boolean      = rxn(i) == NULL;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            || (tag_same(e1._2, e2._2) && (
+            (e1._1 == pipe_node_4_reaction_0 && e2._1 == pipe_node_4_reaction_1)
+            || (e1._1 == pipe_node_5_reaction_0 && e2._1 == pipe_node_5_reaction_1)
+            || (e1._1 == pipe_source_reaction_0 && e2._1 == pipe_node_1_reaction_0)
+            || (e1._1 == pipe_node_5_reaction_1 && e2._1 == pipe_sink_reaction_0)
+            || (e1._1 == pipe_node_3_reaction_1 && e2._1 == pipe_node_4_reaction_0)
+            || (e1._1 == pipe_node_1_reaction_0 && e2._1 == pipe_node_1_reaction_1)
+            || (e1._1 == pipe_node_1_reaction_1 && e2._1 == pipe_node_2_reaction_0)
+            || (e1._1 == pipe_node_2_reaction_1 && e2._1 == pipe_node_3_reaction_0)
+            || (e1._1 == pipe_node_4_reaction_1 && e2._1 == pipe_node_5_reaction_0)
+            || (e1._1 == pipe_node_3_reaction_0 && e2._1 == pipe_node_3_reaction_1)
+            || (e1._1 == pipe_node_2_reaction_0 && e2._1 == pipe_node_2_reaction_1)
+            ));
+    
+    define startup_triggers(n : rxn_t) : boolean
+    =   // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (finite_exists (i : integer) in indices :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(finite_forall (i : integer) in indices :: (finite_forall (j : integer) in indices :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j)));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(finite_forall (i : integer) in indices :: (finite_forall (j : integer) in indices :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j)))));
+    
+    // Tags should be positive
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    // Begin the frame at the start time specified.
+    define start_frame(i : step_t) : boolean =
+        (tag_same(g(i), {start, 0}) || tag_later(g(i), {start, 0}));
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END)
+        ==> start_frame(i));
+    
+    // NULL events should appear in the suffix, except for START.
+    axiom(finite_forall (j : integer) in indices :: (j > START && j <= END) ==> (
+        (rxn(j)) != NULL) ==> 
+            (finite_forall (i : integer) in indices :: (i > START && i < j) ==> (rxn(i) != NULL)));
+    
+    // When a NULL event occurs, the state stays the same.
+    axiom(finite_forall (j : integer) in indices :: (j > START && j <= END) ==> (
+        (rxn(j) == NULL) ==> (s(j) == s(j-1))
+    ));
+    
+    /***************************
+    * Connections and Actions *
+    ***************************/
+    
+    // If pipe_source__timer is present, then there exists a pipe_source_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If pipe_source__timer is present, there exists an pipe_source_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_source__timer_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == pipe_source_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(600000000))
+        ))
+        // If pipe_source__timer is not present, then value stays the same.
+        && (!pipe_source__timer_is_present(t(i)) ==> (
+            pipe_source__timer(s(i)) == pipe_source__timer(s(i-1))
+        ))
+    ));
+    
+    // If pipe_node_4_send_output is present, then there exists a pipe_node_4_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If pipe_node_4_send_output is present, there exists an pipe_node_4_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_4_send_output_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == pipe_node_4_reaction_0
+            && g(i) == tag_schedule(g(j), mstep())
+        ))
+        // If pipe_node_4_send_output is not present, then value stays the same.
+        && (!pipe_node_4_send_output_is_present(t(i)) ==> (
+            pipe_node_4_send_output(s(i)) == pipe_node_4_send_output(s(i-1))
+        ))
+    ));
+    
+    // If pipe_node_5_send_output is present, then there exists a pipe_node_5_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If pipe_node_5_send_output is present, there exists an pipe_node_5_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_5_send_output_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == pipe_node_5_reaction_0
+            && g(i) == tag_schedule(g(j), mstep())
+        ))
+        // If pipe_node_5_send_output is not present, then value stays the same.
+        && (!pipe_node_5_send_output_is_present(t(i)) ==> (
+            pipe_node_5_send_output(s(i)) == pipe_node_5_send_output(s(i-1))
+        ))
+    ));
+    
+    // pipe_source_out -> pipe_node_1_in
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> (
+        // If pipe_source_out is present then pipe_node_1_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        (pipe_source_out_is_present(t(i)) ==> ((
+            finite_exists (j : integer) in indices :: j > i && j <= END
+            && pipe_node_1_in_is_present(t(j))
+            && pipe_node_1_in(s(j)) == pipe_source_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        )||(
+        (finite_forall (k : integer) in indices :: (k > i && k <= END) ==> (rxn(k) != NULL
+            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_earlier(g(k), tag_schedule(g(i), nsec(1000000000))))
+        ))
+        )
+        ))
+        // If pipe_node_1_in is present, there exists an pipe_source_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_1_in_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && pipe_source_out_is_present(t(j))
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If pipe_node_1_in is not present, then value stays the same.
+        && (!pipe_node_1_in_is_present(t(i)) ==> (
+            pipe_node_1_in(s(i)) == pipe_node_1_in(s(i-1))
+        ))
+    ));
+    
+    // pipe_node_5_out -> pipe_sink_in
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> (
+        // If pipe_node_5_out is present then pipe_sink_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        (pipe_node_5_out_is_present(t(i)) ==> ((
+            finite_exists (j : integer) in indices :: j > i && j <= END
+            && pipe_sink_in_is_present(t(j))
+            && pipe_sink_in(s(j)) == pipe_node_5_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        )||(
+        (finite_forall (k : integer) in indices :: (k > i && k <= END) ==> (rxn(k) != NULL
+            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_earlier(g(k), tag_schedule(g(i), nsec(1000000000))))
+        ))
+        )
+        ))
+        // If pipe_sink_in is present, there exists an pipe_node_5_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_sink_in_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && pipe_node_5_out_is_present(t(j))
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If pipe_sink_in is not present, then value stays the same.
+        && (!pipe_sink_in_is_present(t(i)) ==> (
+            pipe_sink_in(s(i)) == pipe_sink_in(s(i-1))
+        ))
+    ));
+    
+    // pipe_node_3_out -> pipe_node_4_in
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> (
+        // If pipe_node_3_out is present then pipe_node_4_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        (pipe_node_3_out_is_present(t(i)) ==> ((
+            finite_exists (j : integer) in indices :: j > i && j <= END
+            && pipe_node_4_in_is_present(t(j))
+            && pipe_node_4_in(s(j)) == pipe_node_3_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        )||(
+        (finite_forall (k : integer) in indices :: (k > i && k <= END) ==> (rxn(k) != NULL
+            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_earlier(g(k), tag_schedule(g(i), nsec(1000000000))))
+        ))
+        )
+        ))
+        // If pipe_node_4_in is present, there exists an pipe_node_3_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_4_in_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && pipe_node_3_out_is_present(t(j))
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If pipe_node_4_in is not present, then value stays the same.
+        && (!pipe_node_4_in_is_present(t(i)) ==> (
+            pipe_node_4_in(s(i)) == pipe_node_4_in(s(i-1))
+        ))
+    ));
+    
+    // If pipe_node_1_send_output is present, then there exists a pipe_node_1_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If pipe_node_1_send_output is present, there exists an pipe_node_1_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_1_send_output_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == pipe_node_1_reaction_0
+            && g(i) == tag_schedule(g(j), mstep())
+        ))
+        // If pipe_node_1_send_output is not present, then value stays the same.
+        && (!pipe_node_1_send_output_is_present(t(i)) ==> (
+            pipe_node_1_send_output(s(i)) == pipe_node_1_send_output(s(i-1))
+        ))
+    ));
+    
+    // pipe_node_1_out -> pipe_node_2_in
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> (
+        // If pipe_node_1_out is present then pipe_node_2_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        (pipe_node_1_out_is_present(t(i)) ==> ((
+            finite_exists (j : integer) in indices :: j > i && j <= END
+            && pipe_node_2_in_is_present(t(j))
+            && pipe_node_2_in(s(j)) == pipe_node_1_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        )||(
+        (finite_forall (k : integer) in indices :: (k > i && k <= END) ==> (rxn(k) != NULL
+            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_earlier(g(k), tag_schedule(g(i), nsec(1000000000))))
+        ))
+        )
+        ))
+        // If pipe_node_2_in is present, there exists an pipe_node_1_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_2_in_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && pipe_node_1_out_is_present(t(j))
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If pipe_node_2_in is not present, then value stays the same.
+        && (!pipe_node_2_in_is_present(t(i)) ==> (
+            pipe_node_2_in(s(i)) == pipe_node_2_in(s(i-1))
+        ))
+    ));
+    
+    // pipe_node_2_out -> pipe_node_3_in
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> (
+        // If pipe_node_2_out is present then pipe_node_3_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        (pipe_node_2_out_is_present(t(i)) ==> ((
+            finite_exists (j : integer) in indices :: j > i && j <= END
+            && pipe_node_3_in_is_present(t(j))
+            && pipe_node_3_in(s(j)) == pipe_node_2_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        )||(
+        (finite_forall (k : integer) in indices :: (k > i && k <= END) ==> (rxn(k) != NULL
+            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_earlier(g(k), tag_schedule(g(i), nsec(1000000000))))
+        ))
+        )
+        ))
+        // If pipe_node_3_in is present, there exists an pipe_node_2_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_3_in_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && pipe_node_2_out_is_present(t(j))
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If pipe_node_3_in is not present, then value stays the same.
+        && (!pipe_node_3_in_is_present(t(i)) ==> (
+            pipe_node_3_in(s(i)) == pipe_node_3_in(s(i-1))
+        ))
+    ));
+    
+    // pipe_node_4_out -> pipe_node_5_in
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> (
+        // If pipe_node_4_out is present then pipe_node_5_in will be present
+        // with the same value after some fixed delay of 1000000000 nanoseconds.
+        (pipe_node_4_out_is_present(t(i)) ==> ((
+            finite_exists (j : integer) in indices :: j > i && j <= END
+            && pipe_node_5_in_is_present(t(j))
+            && pipe_node_5_in(s(j)) == pipe_node_4_out(s(i))
+            && g(j) == tag_schedule(g(i), nsec(1000000000))
+        )||(
+        (finite_forall (k : integer) in indices :: (k > i && k <= END) ==> (rxn(k) != NULL
+            && (tag_same(g(k), tag_schedule(g(i), nsec(1000000000))) || tag_earlier(g(k), tag_schedule(g(i), nsec(1000000000))))
+        ))
+        )
+        ))
+        // If pipe_node_5_in is present, there exists an pipe_node_4_out.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_5_in_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && pipe_node_4_out_is_present(t(j))
+            && g(i) == tag_schedule(g(j), nsec(1000000000))
+        ))
+        // If pipe_node_5_in is not present, then value stays the same.
+        && (!pipe_node_5_in_is_present(t(i)) ==> (
+            pipe_node_5_in(s(i)) == pipe_node_5_in(s(i-1))
+        ))
+    ));
+    
+    // If pipe_node_3_send_output is present, then there exists a pipe_node_3_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If pipe_node_3_send_output is present, there exists an pipe_node_3_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_3_send_output_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == pipe_node_3_reaction_0
+            && g(i) == tag_schedule(g(j), mstep())
+        ))
+        // If pipe_node_3_send_output is not present, then value stays the same.
+        && (!pipe_node_3_send_output_is_present(t(i)) ==> (
+            pipe_node_3_send_output(s(i)) == pipe_node_3_send_output(s(i-1))
+        ))
+    ));
+    
+    // If pipe_node_2_send_output is present, then there exists a pipe_node_2_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If pipe_node_2_send_output is present, there exists an pipe_node_2_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (pipe_node_2_send_output_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == pipe_node_2_reaction_0
+            && g(i) == tag_schedule(g(j), mstep())
+        ))
+        // If pipe_node_2_send_output is not present, then value stays the same.
+        && (!pipe_node_2_send_output_is_present(t(i)) ==> (
+            pipe_node_2_send_output(s(i)) == pipe_node_2_send_output(s(i-1))
+        ))
+    ));
+    
+    /********************************
+    * Reactions and Their Triggers *
+    ********************************/
+    
+    // pipe.source.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || g(i) == zero()
+        || pipe_source__timer_is_present(t(i))
+    ) <==> (rxn(i) == pipe_source_reaction_0)));
+    
+    // pipe.sink.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_sink_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_sink_reaction_0)));
+    
+    // pipe.node_5.reaction_1 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_5_send_output_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_5_reaction_1)));
+    
+    // pipe.node_1.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_1_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_1_reaction_0)));
+    
+    // pipe.node_1.reaction_1 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_1_send_output_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_1_reaction_1)));
+    
+    // pipe.node_2.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_2_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_2_reaction_0)));
+    
+    // pipe.node_2.reaction_1 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_2_send_output_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_2_reaction_1)));
+    
+    // pipe.node_3.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_3_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_3_reaction_0)));
+    
+    // pipe.node_3.reaction_1 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_3_send_output_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_3_reaction_1)));
+    
+    // pipe.node_4.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_4_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_4_reaction_0)));
+    
+    // pipe.node_4.reaction_1 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_4_send_output_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_4_reaction_1)));
+    
+    // pipe.node_5.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || pipe_node_5_in_is_present(t(i))
+    ) <==> (rxn(i) == pipe_node_5_reaction_0)));
+    
+    /**********************
+    * Startup & Shutdown *
+    **********************/         
+    
+    // pipe.source.reaction_0 is triggered by startup.
+    axiom(startup_triggers(pipe_source_reaction_0));
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && pipe_node_5_out(s(0)) == 0
+        && pipe_node_1_out(s(0)) == 0
+        && pipe_node_3_in(s(0)) == 0
+        && pipe_sink_in(s(0)) == 0
+        && pipe_node_1_in(s(0)) == 0
+        && pipe_node_5_in(s(0)) == 0
+        && pipe_node_2_in(s(0)) == 0
+        && pipe_node_2_out(s(0)) == 0
+        && pipe_node_3_out(s(0)) == 0
+        && pipe_source_out(s(0)) == 0
+        && pipe_node_4_in(s(0)) == 0
+        && pipe_node_4_out(s(0)) == 0
+        && pipe_node_5_send_output(s(0)) == 0
+        && pipe_node_3_send_output(s(0)) == 0
+        && pipe_node_1_send_output(s(0)) == 0
+        && pipe_source__timer(s(0)) == 0
+        && pipe_node_4_send_output(s(0)) == 0
+        && pipe_node_2_send_output(s(0)) == 0
+        && pipe_node_1_count(s(0)) == 0
+        && pipe_node_1_payload(s(0)) == 0
+        && pipe_node_2_count(s(0)) == 0
+        && pipe_node_2_payload(s(0)) == 0
+        && pipe_node_3_count(s(0)) == 0
+        && pipe_node_3_payload(s(0)) == 0
+        && pipe_node_4_count(s(0)) == 0
+        && pipe_node_4_payload(s(0)) == 0
+        && pipe_node_5_count(s(0)) == 0
+        && pipe_node_5_payload(s(0)) == 0
+        && !pipe_node_5_out_is_present(t(0))
+        && !pipe_node_1_out_is_present(t(0))
+        && !pipe_node_3_in_is_present(t(0))
+        && !pipe_sink_in_is_present(t(0))
+        && !pipe_node_1_in_is_present(t(0))
+        && !pipe_node_5_in_is_present(t(0))
+        && !pipe_node_2_in_is_present(t(0))
+        && !pipe_node_2_out_is_present(t(0))
+        && !pipe_node_3_out_is_present(t(0))
+        && !pipe_source_out_is_present(t(0))
+        && !pipe_node_4_in_is_present(t(0))
+        && !pipe_node_4_out_is_present(t(0))
+        && !pipe_node_5_send_output_is_present(t(0))
+        && !pipe_node_3_send_output_is_present(t(0))
+        && !pipe_node_1_send_output_is_present(t(0))
+        && !pipe_source__timer_is_present(t(0))
+        && !pipe_node_4_send_output_is_present(t(0))
+        && !pipe_node_2_send_output_is_present(t(0))
+        ;
+        
+    /*********************
+    * Reactor Contracts *
+    *********************/
+    
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    /* Pre/post conditions for pipe.source.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_source_reaction_0 ==> ( true
+        //// Line 24 in the LF program
+        && ((((((pipe_source_out_is_present(t(i)) && pipe_source_out(s(i)) == 1))))))
+        //// Line 25 in the LF program
+        && ((((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && pipe_source__timer_is_present(t(i0)) && pipe_source__timer(s(i0)) == 0 && g(i0) == tag_schedule(g(i), nsec(600000000))))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !pipe_source__timer_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), nsec(600000000)))
+            || tag_earlier(g(x0), tag_schedule(g(i), nsec(600000000)))
+            )))
+            // && !(finite_exists (x0 : integer) in indices :: x0 > i && x0 <= END 
+            // // && rxn(x0) == NULL 
+            // && !pipe_source__timer_is_present(t(x0))
+            // && tag_later(g(x0), tag_schedule(g(i), nsec(600000000))))
+        )))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.sink.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_sink_reaction_0 ==> ( true
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_5.reaction_1 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_5_reaction_1 ==> ( true
+        //// Line 58 in the LF program
+        && ((((((pipe_node_5_out_is_present(t(i)) && pipe_node_5_out(s(i)) == 1))))))
+        //// Line 59 in the LF program
+        && ((((((((pipe_node_5_count(s(i))))== (((((((pipe_node_5_count(s(i-1))))))-(((1))))))))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_1.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_1_reaction_0 ==> ( true
+        //// Line 49 in the LF program
+        && ((((((((pipe_node_1_payload(s(i))))== ((pipe_node_1_in(s(i))))))))))
+        //// Line 50 in the LF program
+        && ((((((((pipe_node_1_count(s(i))))== (((((((pipe_node_1_count(s(i-1)))))))+((((1))))))))))))
+        //// Line 51 in the LF program
+        && ((((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && pipe_node_1_send_output_is_present(t(i0)) && pipe_node_1_send_output(s(i0)) == 0 && g(i0) == tag_schedule(g(i), mstep())))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !pipe_node_1_send_output_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), mstep()))
+            || tag_earlier(g(x0), tag_schedule(g(i), mstep()))
+            )))
+            // && !(finite_exists (x0 : integer) in indices :: x0 > i && x0 <= END 
+            // // && rxn(x0) == NULL 
+            // && !pipe_node_1_send_output_is_present(t(x0))
+            // && tag_later(g(x0), tag_schedule(g(i), mstep())))
+        )))))))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_1.reaction_1 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_1_reaction_1 ==> ( true
+        //// Line 58 in the LF program
+        && ((((((pipe_node_1_out_is_present(t(i)) && pipe_node_1_out(s(i)) == 1))))))
+        //// Line 59 in the LF program
+        && ((((((((pipe_node_1_count(s(i))))== (((((((pipe_node_1_count(s(i-1))))))-(((1))))))))))))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_2.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_2_reaction_0 ==> ( true
+        //// Line 49 in the LF program
+        && ((((((((pipe_node_2_payload(s(i))))== ((pipe_node_2_in(s(i))))))))))
+        //// Line 50 in the LF program
+        && ((((((((pipe_node_2_count(s(i))))== (((((((pipe_node_2_count(s(i-1)))))))+((((1))))))))))))
+        //// Line 51 in the LF program
+        && ((((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && pipe_node_2_send_output_is_present(t(i0)) && pipe_node_2_send_output(s(i0)) == 0 && g(i0) == tag_schedule(g(i), mstep())))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !pipe_node_2_send_output_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), mstep()))
+            || tag_earlier(g(x0), tag_schedule(g(i), mstep()))
+            )))
+            // && !(finite_exists (x0 : integer) in indices :: x0 > i && x0 <= END 
+            // // && rxn(x0) == NULL 
+            // && !pipe_node_2_send_output_is_present(t(x0))
+            // && tag_later(g(x0), tag_schedule(g(i), mstep())))
+        )))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_2.reaction_1 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_2_reaction_1 ==> ( true
+        //// Line 58 in the LF program
+        && ((((((pipe_node_2_out_is_present(t(i)) && pipe_node_2_out(s(i)) == 1))))))
+        //// Line 59 in the LF program
+        && ((((((((pipe_node_2_count(s(i))))== (((((((pipe_node_2_count(s(i-1))))))-(((1))))))))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_3.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_3_reaction_0 ==> ( true
+        //// Line 49 in the LF program
+        && ((((((((pipe_node_3_payload(s(i))))== ((pipe_node_3_in(s(i))))))))))
+        //// Line 50 in the LF program
+        && ((((((((pipe_node_3_count(s(i))))== (((((((pipe_node_3_count(s(i-1)))))))+((((1))))))))))))
+        //// Line 51 in the LF program
+        && ((((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && pipe_node_3_send_output_is_present(t(i0)) && pipe_node_3_send_output(s(i0)) == 0 && g(i0) == tag_schedule(g(i), mstep())))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !pipe_node_3_send_output_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), mstep()))
+            || tag_earlier(g(x0), tag_schedule(g(i), mstep()))
+            )))
+            // && !(finite_exists (x0 : integer) in indices :: x0 > i && x0 <= END 
+            // // && rxn(x0) == NULL 
+            // && !pipe_node_3_send_output_is_present(t(x0))
+            // && tag_later(g(x0), tag_schedule(g(i), mstep())))
+        )))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_3.reaction_1 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_3_reaction_1 ==> ( true
+        //// Line 58 in the LF program
+        && ((((((pipe_node_3_out_is_present(t(i)) && pipe_node_3_out(s(i)) == 1))))))
+        //// Line 59 in the LF program
+        && ((((((((pipe_node_3_count(s(i))))== (((((((pipe_node_3_count(s(i-1))))))-(((1))))))))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_4.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_4_reaction_0 ==> ( true
+        //// Line 49 in the LF program
+        && ((((((((pipe_node_4_payload(s(i))))== ((pipe_node_4_in(s(i))))))))))
+        //// Line 50 in the LF program
+        && ((((((((pipe_node_4_count(s(i))))== (((((((pipe_node_4_count(s(i-1)))))))+((((1))))))))))))
+        //// Line 51 in the LF program
+        && ((((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && pipe_node_4_send_output_is_present(t(i0)) && pipe_node_4_send_output(s(i0)) == 0 && g(i0) == tag_schedule(g(i), mstep())))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !pipe_node_4_send_output_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), mstep()))
+            || tag_earlier(g(x0), tag_schedule(g(i), mstep()))
+            )))
+            // && !(finite_exists (x0 : integer) in indices :: x0 > i && x0 <= END 
+            // // && rxn(x0) == NULL 
+            // && !pipe_node_4_send_output_is_present(t(x0))
+            // && tag_later(g(x0), tag_schedule(g(i), mstep())))
+        )))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_4.reaction_1 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_4_reaction_1 ==> ( true
+        //// Line 58 in the LF program
+        && ((((((pipe_node_4_out_is_present(t(i)) && pipe_node_4_out(s(i)) == 1))))))
+        //// Line 59 in the LF program
+        && ((((((((pipe_node_4_count(s(i))))== (((((((pipe_node_4_count(s(i-1))))))-(((1))))))))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && pipe_node_5_count(s(i)) == pipe_node_5_count(s(i-1))
+        && pipe_node_5_payload(s(i)) == pipe_node_5_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_5_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_5_send_output_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /* Pre/post conditions for pipe.node_5.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == pipe_node_5_reaction_0 ==> ( true
+        //// Line 49 in the LF program
+        && ((((((((pipe_node_5_payload(s(i))))== ((pipe_node_5_in(s(i))))))))))
+        //// Line 50 in the LF program
+        && ((((((((pipe_node_5_count(s(i))))== (((((((pipe_node_5_count(s(i-1)))))))+((((1))))))))))))
+        //// Line 51 in the LF program
+        && ((((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && pipe_node_5_send_output_is_present(t(i0)) && pipe_node_5_send_output(s(i0)) == 0 && g(i0) == tag_schedule(g(i), mstep())))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !pipe_node_5_send_output_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), mstep()))
+            || tag_earlier(g(x0), tag_schedule(g(i), mstep()))
+            )))
+            // && !(finite_exists (x0 : integer) in indices :: x0 > i && x0 <= END 
+            // // && rxn(x0) == NULL 
+            // && !pipe_node_5_send_output_is_present(t(x0))
+            // && tag_later(g(x0), tag_schedule(g(i), mstep())))
+        )))))))
+        && pipe_node_1_count(s(i)) == pipe_node_1_count(s(i-1))
+        && pipe_node_1_payload(s(i)) == pipe_node_1_payload(s(i-1))
+        && pipe_node_2_count(s(i)) == pipe_node_2_count(s(i-1))
+        && pipe_node_2_payload(s(i)) == pipe_node_2_payload(s(i-1))
+        && pipe_node_3_count(s(i)) == pipe_node_3_count(s(i-1))
+        && pipe_node_3_payload(s(i)) == pipe_node_3_payload(s(i-1))
+        && pipe_node_4_count(s(i)) == pipe_node_4_count(s(i-1))
+        && pipe_node_4_payload(s(i)) == pipe_node_4_payload(s(i-1))
+        && !pipe_node_5_out_is_present(t(i))
+        && !pipe_node_1_out_is_present(t(i))
+        && !pipe_node_3_in_is_present(t(i))
+        && !pipe_sink_in_is_present(t(i))
+        && !pipe_node_1_in_is_present(t(i))
+        && !pipe_node_2_in_is_present(t(i))
+        && !pipe_node_2_out_is_present(t(i))
+        && !pipe_node_3_out_is_present(t(i))
+        && !pipe_source_out_is_present(t(i))
+        && !pipe_node_4_in_is_present(t(i))
+        && !pipe_node_4_out_is_present(t(i))
+        && !pipe_node_3_send_output_is_present(t(i))
+        && !pipe_node_1_send_output_is_present(t(i))
+        && !pipe_source__timer_is_present(t(i))
+        && !pipe_node_4_send_output_is_present(t(i))
+        && !pipe_node_2_send_output_is_present(t(i))
+    )));
+    
+    /************
+    * Property *
+    ************/
+    // trace length = k + N
+    const k : integer = 3;       // Induction steps
+    const N : integer = 7;   // The property bound
+    
+    // The FOL property translated from user-defined LTL property
+    define P(i : step_t) : boolean =
+        true
+        //// Line 71 in the LF program
+        && ((((((((pipe_node_1_count(s(i))))<= (1))))&&(((((pipe_node_2_count(s(i))))<= (1))))&&(((((pipe_node_3_count(s(i))))<= (1))))&&(((((pipe_node_4_count(s(i))))<= (1))))&&(((((pipe_node_5_count(s(i))))<= (1)))))))
+    ;
+    
+    // Auxiliary invariant
+    define aux_inv(i : integer) : boolean =
+        // Add this here, so that in the consecution step,
+        // the first state respects start.
+        start_frame(i)
+    ;
+    
+    // Strengthened property
+    define Q(i : step_t) : boolean =
+        P(i) && aux_inv(i);
+    
+    // Helper macro for temporal induction
+    define Globally_Q(start, end : step_t) : boolean =
+        (finite_forall (i : integer) in indices :: (i >= start && i <= end) ==> Q(i));
+    
+    /***************
+     * K-Induction *
+     ***************/
+    // Initiation
+    property initiation_at_most_one_message : initial_condition() ==>
+        Globally_Q(0, k);
+    
+    // Consecution
+    property consecution_at_most_one_message : 
+        Globally_Q(0, k) ==> Q(k+1);
+    
+    control {
+        v = bmc(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+}

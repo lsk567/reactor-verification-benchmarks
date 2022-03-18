@@ -9,64 +9,104 @@ int main(int argc, char* argv[]) {
     return lf_reactor_c_main(argc, argv);
 }
 // =============== START reactor class Source
+#line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 typedef struct {
+#line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int value;
+#line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool is_present;
+#line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int num_destinations;
+#line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 } source_out_t;
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 typedef struct {
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     trigger_t* trigger;
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int value;
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool is_present;
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool has_value;
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     lf_token_t* token;
+#line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 } source__timer_t;
 typedef struct {
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     source__timer_t _lf__timer;
+    #line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     source_out_t _lf_out;
+    #line 23 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int _lf_out_width;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t _lf__reaction_0;
     trigger_t _lf__startup;
     reaction_t* _lf__startup_reactions[1];
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     trigger_t _lf___timer;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t* _lf___timer_reactions[1];
 } source_self_t;
 void sourcereaction_function_0(void* instance_args) {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-variable"
     source_self_t* self = (source_self_t*)instance_args;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Expose the action struct as a local variable whose name matches the action name.
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     source__timer_t* _timer = &self->_lf__timer;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Set the fields of the action struct to match the current trigger.
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     _timer->is_present = (bool)self->_lf___timer.status;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     _timer->has_value = ((self->_lf___timer.token) != NULL && (self->_lf___timer.token)->value != NULL);
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     _timer->token = (self->_lf___timer.token);
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     if (_timer->has_value) {
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
         _timer->value = *(int*)(self->_lf___timer.token)->value;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     }
     source_out_t* out = &self->_lf_out;
     #pragma GCC diagnostic pop
+    #line 29 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     SET(out, 1);
     schedule(_timer, 0);
         
 }
 source_self_t* new_Source() {
     source_self_t* self = (source_self_t*)calloc(1, sizeof(source_self_t));
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__timer.trigger = &self->_lf___timer;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.number = 0;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.function = sourcereaction_function_0;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.self = self;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.deadline_violation_handler = NULL;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.STP_handler = NULL;
+    #line 26 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.name = "?";
     self->_lf__startup_reactions[0] = &self->_lf__reaction_0;
     self->_lf__startup.last = NULL;
     self->_lf__startup.reactions = &self->_lf__startup_reactions[0];
     self->_lf__startup.number_of_reactions = 1;
     self->_lf__startup.is_timer = false;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf___timer.last = NULL;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf___timer_reactions[0] = &self->_lf__reaction_0;
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf___timer.reactions = &self->_lf___timer_reactions[0];
+    #line 24 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf___timer.number_of_reactions = 1;
     self->_lf___timer.is_physical = false;
     self->_lf___timer.element_size = sizeof(int);
@@ -90,19 +130,32 @@ void delete_Source(source_self_t* self) {
 // =============== END reactor class Source
 
 // =============== START reactor class Sink
+#line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 typedef struct {
+#line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int value;
+#line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool is_present;
+#line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int num_destinations;
+#line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 } sink_in_t;
 typedef struct {
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     sink_in_t* _lf_in;
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // width of -2 indicates that it is not a multiport.
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int _lf_in_width;
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Default input (in case it does not get connected)
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     sink_in_t _lf_default__in;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t _lf__reaction_0;
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     trigger_t _lf__in;
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t* _lf__in_reactions[1];
 } sink_self_t;
 void sinkreaction_function_0(void* instance_args) {
@@ -112,22 +165,36 @@ void sinkreaction_function_0(void* instance_args) {
     sink_in_t* in = self->_lf_in;
     int in_width = self->_lf_in_width;
     #pragma GCC diagnostic pop
+    #line 37 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     printf("Received after pipeline: %d\n", in->value);
         
 }
 sink_self_t* new_Sink() {
     sink_self_t* self = (sink_self_t*)calloc(1, sizeof(sink_self_t));
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Set input by default to an always absent default input.
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf_in = &self->_lf_default__in;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.number = 0;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.function = sinkreaction_function_0;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.self = self;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.deadline_violation_handler = NULL;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.STP_handler = NULL;
+    #line 36 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.name = "?";
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in.last = NULL;
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in_reactions[0] = &self->_lf__reaction_0;
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in.reactions = &self->_lf__in_reactions[0];
+    #line 35 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in.number_of_reactions = 1;
     self->_lf__in.element_size = sizeof(int);
     return self;
@@ -150,39 +217,72 @@ void delete_Sink(sink_self_t* self) {
 // =============== END reactor class Sink
 
 // =============== START reactor class Node
+#line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 typedef struct {
+#line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int value;
+#line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool is_present;
+#line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int num_destinations;
+#line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 } node_in_t;
+#line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 typedef struct {
+#line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int value;
+#line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool is_present;
+#line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int num_destinations;
+#line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 } node_out_t;
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 typedef struct {
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     trigger_t* trigger;
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int value;
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool is_present;
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     bool has_value;
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     lf_token_t* token;
+#line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
 } node_send_output_t;
 typedef struct {
+    #line 46 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int count;
+    #line 47 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int payload;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     node_send_output_t _lf_send_output;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     node_in_t* _lf_in;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // width of -2 indicates that it is not a multiport.
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int _lf_in_width;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Default input (in case it does not get connected)
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     node_in_t _lf_default__in;
+    #line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     node_out_t _lf_out;
+    #line 44 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     int _lf_out_width;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t _lf__reaction_0;
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t _lf__reaction_1;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     trigger_t _lf__send_output;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t* _lf__send_output_reactions[1];
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     trigger_t _lf__in;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     reaction_t* _lf__in_reactions[1];
 } node_self_t;
 void nodereaction_function_0(void* instance_args) {
@@ -193,6 +293,7 @@ void nodereaction_function_0(void* instance_args) {
     int in_width = self->_lf_in_width;
     node_send_output_t* send_output = &self->_lf_send_output;
     #pragma GCC diagnostic pop
+    #line 55 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->payload = in->value;
     self->count++;
     schedule(send_output, 0);
@@ -202,47 +303,82 @@ void nodereaction_function_1(void* instance_args) {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-variable"
     node_self_t* self = (node_self_t*)instance_args;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Expose the action struct as a local variable whose name matches the action name.
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     node_send_output_t* send_output = &self->_lf_send_output;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Set the fields of the action struct to match the current trigger.
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     send_output->is_present = (bool)self->_lf__send_output.status;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     send_output->has_value = ((self->_lf__send_output.token) != NULL && (self->_lf__send_output.token)->value != NULL);
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     send_output->token = (self->_lf__send_output.token);
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     if (send_output->has_value) {
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
         send_output->value = *(int*)(self->_lf__send_output.token)->value;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     }
     node_out_t* out = &self->_lf_out;
     #pragma GCC diagnostic pop
+    #line 63 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     SET(out, self->payload);
     self->count--;
         
 }
 node_self_t* new_Node() {
     node_self_t* self = (node_self_t*)calloc(1, sizeof(node_self_t));
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf_send_output.trigger = &self->_lf__send_output;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     // Set input by default to an always absent default input.
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf_in = &self->_lf_default__in;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.number = 0;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.function = nodereaction_function_0;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.self = self;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.deadline_violation_handler = NULL;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.STP_handler = NULL;
+    #line 51 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_0.name = "?";
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_1.number = 1;
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_1.function = nodereaction_function_1;
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_1.self = self;
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_1.deadline_violation_handler = NULL;
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_1.STP_handler = NULL;
+    #line 60 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__reaction_1.name = "?";
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__send_output.last = NULL;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__send_output_reactions[0] = &self->_lf__reaction_1;
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__send_output.reactions = &self->_lf__send_output_reactions[0];
+    #line 49 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__send_output.number_of_reactions = 1;
     self->_lf__send_output.is_physical = false;
     self->_lf__send_output.element_size = sizeof(int);
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in.last = NULL;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in_reactions[0] = &self->_lf__reaction_0;
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in.reactions = &self->_lf__in_reactions[0];
+    #line 43 "file:/Users/shaokai/Documents/projects/lingua-franca/reactor-verification-benchmarks/soter/pipe/medium_pipe/pipe.lf"
     self->_lf__in.number_of_reactions = 1;
     self->_lf__in.element_size = sizeof(int);
     return self;
@@ -427,12 +563,12 @@ trigger_t* _lf_action_for_port(int port_id) {
 void _lf_initialize_trigger_objects() {
     // Initialize the _lf_clock
     lf_initialize_clock();
-    _lf_tokens_with_ref_count_size = 3;
-    _lf_tokens_with_ref_count = (token_present_t*)malloc(3 * sizeof(token_present_t));
+    _lf_tokens_with_ref_count_size = 6;
+    _lf_tokens_with_ref_count = (token_present_t*)malloc(6 * sizeof(token_present_t));
     // Create the array that will contain pointers to is_present fields to reset on each step.
-    _lf_is_present_fields_size = 6;
-    _lf_is_present_fields = (bool**)malloc(6 * sizeof(bool*));
-    _lf_is_present_fields_abbreviated = (bool**)malloc(6 * sizeof(bool*));
+    _lf_is_present_fields_size = 12;
+    _lf_is_present_fields = (bool**)malloc(12 * sizeof(bool*));
+    _lf_is_present_fields_abbreviated = (bool**)malloc(12 * sizeof(bool*));
     _lf_is_present_fields_abbreviated_size = 0;
     
     pipe_self_t* pipe_self = new_pipe();
@@ -442,7 +578,7 @@ void _lf_initialize_trigger_objects() {
     // width of -2 indicates that it is not a multiport.
     pipe_source_self->_lf_out_width = -2;
     _lf_startup_reactions[0] = &pipe_source_self->_lf__reaction_0;
-    pipe_source_self->_lf___timer.offset = MSEC(900);
+    pipe_source_self->_lf___timer.offset = SEC(1);
     pipe_source_self->_lf___timer.period = -1;
     pipe_source_self->_lf___timer.token = _lf_create_token(sizeof(int));
     pipe_source_self->_lf___timer.status = absent;
@@ -475,6 +611,23 @@ void _lf_initialize_trigger_objects() {
             = &pipe_node_1_self->_lf__send_output.status;
     _lf_tokens_with_ref_count[1].reset_is_present = true;
     //***** End initializing pipe.node_1
+    // ************* Instance pipe.node_2 of class Node
+    node_self_t* pipe_node_2_self = new_Node();
+    //***** Start initializing pipe.node_2
+    // width of -2 indicates that it is not a multiport.
+    pipe_node_2_self->_lf_out_width = -2;
+    // width of -2 indicates that it is not a multiport.
+    pipe_node_2_self->_lf_in_width = -2;
+    pipe_node_2_self->_lf__send_output.offset = 0;
+    pipe_node_2_self->_lf__send_output.period = -1;
+    pipe_node_2_self->_lf__send_output.token = _lf_create_token(sizeof(int));
+    pipe_node_2_self->_lf__send_output.status = absent;
+    _lf_tokens_with_ref_count[2].token
+            = &pipe_node_2_self->_lf__send_output.token;
+    _lf_tokens_with_ref_count[2].status
+            = &pipe_node_2_self->_lf__send_output.status;
+    _lf_tokens_with_ref_count[2].reset_is_present = true;
+    //***** End initializing pipe.node_2
     // ************* Instance pipe.delay of class _lf_GenDelay_197ef
     _lf_gendelay_197ef_self_t* pipe_delay_self = new__lf_GenDelay_197ef();
     //***** Start initializing pipe.delay
@@ -487,12 +640,48 @@ void _lf_initialize_trigger_objects() {
     pipe_delay_self->_lf__act.period = -1;
     pipe_delay_self->_lf__act.token = _lf_create_token(sizeof(int));
     pipe_delay_self->_lf__act.status = absent;
-    _lf_tokens_with_ref_count[2].token
+    _lf_tokens_with_ref_count[3].token
             = &pipe_delay_self->_lf__act.token;
-    _lf_tokens_with_ref_count[2].status
+    _lf_tokens_with_ref_count[3].status
             = &pipe_delay_self->_lf__act.status;
-    _lf_tokens_with_ref_count[2].reset_is_present = true;
+    _lf_tokens_with_ref_count[3].reset_is_present = true;
     //***** End initializing pipe.delay
+    // ************* Instance pipe.delay_0 of class _lf_GenDelay_197ef
+    _lf_gendelay_197ef_self_t* pipe_delay_0_self = new__lf_GenDelay_197ef();
+    //***** Start initializing pipe.delay_0
+    pipe_delay_0_self->delay = SEC(1); 
+    // width of -2 indicates that it is not a multiport.
+    pipe_delay_0_self->_lf_out_width = -2;
+    // width of -2 indicates that it is not a multiport.
+    pipe_delay_0_self->_lf_inp_width = -2;
+    pipe_delay_0_self->_lf__act.offset = SEC(1);
+    pipe_delay_0_self->_lf__act.period = -1;
+    pipe_delay_0_self->_lf__act.token = _lf_create_token(sizeof(int));
+    pipe_delay_0_self->_lf__act.status = absent;
+    _lf_tokens_with_ref_count[4].token
+            = &pipe_delay_0_self->_lf__act.token;
+    _lf_tokens_with_ref_count[4].status
+            = &pipe_delay_0_self->_lf__act.status;
+    _lf_tokens_with_ref_count[4].reset_is_present = true;
+    //***** End initializing pipe.delay_0
+    // ************* Instance pipe.delay_1 of class _lf_GenDelay_197ef
+    _lf_gendelay_197ef_self_t* pipe_delay_1_self = new__lf_GenDelay_197ef();
+    //***** Start initializing pipe.delay_1
+    pipe_delay_1_self->delay = SEC(1); 
+    // width of -2 indicates that it is not a multiport.
+    pipe_delay_1_self->_lf_out_width = -2;
+    // width of -2 indicates that it is not a multiport.
+    pipe_delay_1_self->_lf_inp_width = -2;
+    pipe_delay_1_self->_lf__act.offset = SEC(1);
+    pipe_delay_1_self->_lf__act.period = -1;
+    pipe_delay_1_self->_lf__act.token = _lf_create_token(sizeof(int));
+    pipe_delay_1_self->_lf__act.status = absent;
+    _lf_tokens_with_ref_count[5].token
+            = &pipe_delay_1_self->_lf__act.token;
+    _lf_tokens_with_ref_count[5].status
+            = &pipe_delay_1_self->_lf__act.status;
+    _lf_tokens_with_ref_count[5].reset_is_present = true;
+    //***** End initializing pipe.delay_1
     //***** End initializing pipe
     // Allocate memory.
     // Populate arrays of trigger pointers.
@@ -542,7 +731,7 @@ void _lf_initialize_trigger_objects() {
     }
     // Initialize the output_produced array.
     // Reaction 0 of pipe.sink depends on one maximal upstream reaction.
-    pipe_sink_self->_lf__reaction_0.last_enabling_reaction = &(pipe_node_1_self->_lf__reaction_1);
+    pipe_sink_self->_lf__reaction_0.last_enabling_reaction = &(pipe_delay_1_self->_lf__reaction_0);
     // Total number of outputs (single ports and multiport channels) produced by the reaction.
     pipe_node_1_self->_lf__reaction_0.num_outputs = 0;
     // Allocate arrays for triggering downstream reactions.
@@ -586,10 +775,57 @@ void _lf_initialize_trigger_objects() {
             pipe_node_1_self->_lf__reaction_1.triggers[0 + i] = triggerArray;
         }
         // Fill the trigger array.
-        // Point to destination port pipe.sink.in's trigger struct.
-        triggerArray[0] = &pipe_sink_self->_lf__in;
+        // Point to destination port pipe.delay_0.inp's trigger struct.
+        triggerArray[0] = &pipe_delay_0_self->_lf__inp;
     }
     pipe_node_1_self->_lf_out.num_destinations = 1;
+    // Total number of outputs (single ports and multiport channels) produced by the reaction.
+    pipe_node_2_self->_lf__reaction_0.num_outputs = 0;
+    // Allocate arrays for triggering downstream reactions.
+    if (pipe_node_2_self->_lf__reaction_0.num_outputs > 0) {
+        pipe_node_2_self->_lf__reaction_0.output_produced 
+                = (bool**)malloc(sizeof(bool*) * pipe_node_2_self->_lf__reaction_0.num_outputs);
+        pipe_node_2_self->_lf__reaction_0.triggers 
+                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_node_2_self->_lf__reaction_0.num_outputs);
+        pipe_node_2_self->_lf__reaction_0.triggered_sizes 
+                = (int*)calloc(pipe_node_2_self->_lf__reaction_0.num_outputs, sizeof(int));
+    }
+    // Initialize the output_produced array.
+    // Total number of outputs (single ports and multiport channels) produced by the reaction.
+    pipe_node_2_self->_lf__reaction_1.num_outputs = 1;
+    // Allocate arrays for triggering downstream reactions.
+    if (pipe_node_2_self->_lf__reaction_1.num_outputs > 0) {
+        pipe_node_2_self->_lf__reaction_1.output_produced 
+                = (bool**)malloc(sizeof(bool*) * pipe_node_2_self->_lf__reaction_1.num_outputs);
+        pipe_node_2_self->_lf__reaction_1.triggers 
+                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_node_2_self->_lf__reaction_1.num_outputs);
+        pipe_node_2_self->_lf__reaction_1.triggered_sizes 
+                = (int*)calloc(pipe_node_2_self->_lf__reaction_1.num_outputs, sizeof(int));
+    }
+    // Initialize the output_produced array.
+    pipe_node_2_self->_lf__reaction_1.output_produced[0]
+    = &pipe_node_2_self->_lf_out.is_present;
+    // Reaction 0 of pipe.node_2 depends on one maximal upstream reaction.
+    pipe_node_2_self->_lf__reaction_0.last_enabling_reaction = &(pipe_delay_0_self->_lf__reaction_0);
+    // Reaction 1 of pipe.node_2 depends on one maximal upstream reaction.
+    pipe_node_2_self->_lf__reaction_1.last_enabling_reaction = &(pipe_node_2_self->_lf__reaction_0);
+    for (int i = 0; i < 1; i++) {
+        // Reaction 1 of pipe.node_2 triggers 0
+        // downstream reactions through port pipe.node_2.out[0 + i].
+        pipe_node_2_self->_lf__reaction_1.triggered_sizes[0 + i] = 1;
+    }
+    { // For scoping
+        // For reaction 1 of pipe.node_2, allocate an
+        // array of trigger pointers for downstream reactions through port pipe.node_2.out
+        trigger_t** triggerArray = (trigger_t**)malloc(1 * sizeof(trigger_t*));
+        for (int i = 0; i < 1; i++) {
+            pipe_node_2_self->_lf__reaction_1.triggers[0 + i] = triggerArray;
+        }
+        // Fill the trigger array.
+        // Point to destination port pipe.delay_1.inp's trigger struct.
+        triggerArray[0] = &pipe_delay_1_self->_lf__inp;
+    }
+    pipe_node_2_self->_lf_out.num_destinations = 1;
     // Total number of outputs (single ports and multiport channels) produced by the reaction.
     pipe_delay_self->_lf__reaction_0.num_outputs = 1;
     // Allocate arrays for triggering downstream reactions.
@@ -637,22 +873,128 @@ void _lf_initialize_trigger_objects() {
     // Reaction 1 of pipe.delay does not depend on one maximal upstream reaction.
     pipe_delay_self->_lf__reaction_1.last_enabling_reaction = NULL;
     pipe_delay_self->_lf_out.num_destinations = 1;
+    // Total number of outputs (single ports and multiport channels) produced by the reaction.
+    pipe_delay_0_self->_lf__reaction_0.num_outputs = 1;
+    // Allocate arrays for triggering downstream reactions.
+    if (pipe_delay_0_self->_lf__reaction_0.num_outputs > 0) {
+        pipe_delay_0_self->_lf__reaction_0.output_produced 
+                = (bool**)malloc(sizeof(bool*) * pipe_delay_0_self->_lf__reaction_0.num_outputs);
+        pipe_delay_0_self->_lf__reaction_0.triggers 
+                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_delay_0_self->_lf__reaction_0.num_outputs);
+        pipe_delay_0_self->_lf__reaction_0.triggered_sizes 
+                = (int*)calloc(pipe_delay_0_self->_lf__reaction_0.num_outputs, sizeof(int));
+    }
+    // Initialize the output_produced array.
+    pipe_delay_0_self->_lf__reaction_0.output_produced[0]
+    = &pipe_delay_0_self->_lf_out.is_present;
+    // Total number of outputs (single ports and multiport channels) produced by the reaction.
+    pipe_delay_0_self->_lf__reaction_1.num_outputs = 0;
+    // Allocate arrays for triggering downstream reactions.
+    if (pipe_delay_0_self->_lf__reaction_1.num_outputs > 0) {
+        pipe_delay_0_self->_lf__reaction_1.output_produced 
+                = (bool**)malloc(sizeof(bool*) * pipe_delay_0_self->_lf__reaction_1.num_outputs);
+        pipe_delay_0_self->_lf__reaction_1.triggers 
+                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_delay_0_self->_lf__reaction_1.num_outputs);
+        pipe_delay_0_self->_lf__reaction_1.triggered_sizes 
+                = (int*)calloc(pipe_delay_0_self->_lf__reaction_1.num_outputs, sizeof(int));
+    }
+    // Initialize the output_produced array.
+    // Reaction 0 of pipe.delay_0 does not depend on one maximal upstream reaction.
+    pipe_delay_0_self->_lf__reaction_0.last_enabling_reaction = NULL;
+    for (int i = 0; i < 1; i++) {
+        // Reaction 0 of pipe.delay_0 triggers 0
+        // downstream reactions through port pipe.delay_0.out[0 + i].
+        pipe_delay_0_self->_lf__reaction_0.triggered_sizes[0 + i] = 1;
+    }
+    { // For scoping
+        // For reaction 0 of pipe.delay_0, allocate an
+        // array of trigger pointers for downstream reactions through port pipe.delay_0.out
+        trigger_t** triggerArray = (trigger_t**)malloc(1 * sizeof(trigger_t*));
+        for (int i = 0; i < 1; i++) {
+            pipe_delay_0_self->_lf__reaction_0.triggers[0 + i] = triggerArray;
+        }
+        // Fill the trigger array.
+        // Point to destination port pipe.node_2.in's trigger struct.
+        triggerArray[0] = &pipe_node_2_self->_lf__in;
+    }
+    // Reaction 1 of pipe.delay_0 does not depend on one maximal upstream reaction.
+    pipe_delay_0_self->_lf__reaction_1.last_enabling_reaction = NULL;
+    pipe_delay_0_self->_lf_out.num_destinations = 1;
+    // Total number of outputs (single ports and multiport channels) produced by the reaction.
+    pipe_delay_1_self->_lf__reaction_0.num_outputs = 1;
+    // Allocate arrays for triggering downstream reactions.
+    if (pipe_delay_1_self->_lf__reaction_0.num_outputs > 0) {
+        pipe_delay_1_self->_lf__reaction_0.output_produced 
+                = (bool**)malloc(sizeof(bool*) * pipe_delay_1_self->_lf__reaction_0.num_outputs);
+        pipe_delay_1_self->_lf__reaction_0.triggers 
+                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_delay_1_self->_lf__reaction_0.num_outputs);
+        pipe_delay_1_self->_lf__reaction_0.triggered_sizes 
+                = (int*)calloc(pipe_delay_1_self->_lf__reaction_0.num_outputs, sizeof(int));
+    }
+    // Initialize the output_produced array.
+    pipe_delay_1_self->_lf__reaction_0.output_produced[0]
+    = &pipe_delay_1_self->_lf_out.is_present;
+    // Total number of outputs (single ports and multiport channels) produced by the reaction.
+    pipe_delay_1_self->_lf__reaction_1.num_outputs = 0;
+    // Allocate arrays for triggering downstream reactions.
+    if (pipe_delay_1_self->_lf__reaction_1.num_outputs > 0) {
+        pipe_delay_1_self->_lf__reaction_1.output_produced 
+                = (bool**)malloc(sizeof(bool*) * pipe_delay_1_self->_lf__reaction_1.num_outputs);
+        pipe_delay_1_self->_lf__reaction_1.triggers 
+                = (trigger_t***)malloc(sizeof(trigger_t**) * pipe_delay_1_self->_lf__reaction_1.num_outputs);
+        pipe_delay_1_self->_lf__reaction_1.triggered_sizes 
+                = (int*)calloc(pipe_delay_1_self->_lf__reaction_1.num_outputs, sizeof(int));
+    }
+    // Initialize the output_produced array.
+    // Reaction 0 of pipe.delay_1 does not depend on one maximal upstream reaction.
+    pipe_delay_1_self->_lf__reaction_0.last_enabling_reaction = NULL;
+    for (int i = 0; i < 1; i++) {
+        // Reaction 0 of pipe.delay_1 triggers 0
+        // downstream reactions through port pipe.delay_1.out[0 + i].
+        pipe_delay_1_self->_lf__reaction_0.triggered_sizes[0 + i] = 1;
+    }
+    { // For scoping
+        // For reaction 0 of pipe.delay_1, allocate an
+        // array of trigger pointers for downstream reactions through port pipe.delay_1.out
+        trigger_t** triggerArray = (trigger_t**)malloc(1 * sizeof(trigger_t*));
+        for (int i = 0; i < 1; i++) {
+            pipe_delay_1_self->_lf__reaction_0.triggers[0 + i] = triggerArray;
+        }
+        // Fill the trigger array.
+        // Point to destination port pipe.sink.in's trigger struct.
+        triggerArray[0] = &pipe_sink_self->_lf__in;
+    }
+    // Reaction 1 of pipe.delay_1 does not depend on one maximal upstream reaction.
+    pipe_delay_1_self->_lf__reaction_1.last_enabling_reaction = NULL;
+    pipe_delay_1_self->_lf_out.num_destinations = 1;
     // doDeferredInitialize
     // Connect inputs and outputs for reactor pipe.
     // Connect inputs and outputs for reactor pipe.source.
     // END Connect inputs and outputs for reactor pipe.source.
     // Connect inputs and outputs for reactor pipe.sink.
-    // Connect pipe.node_1.out to port pipe.sink.in
-    pipe_sink_self->_lf_in = (sink_in_t*)&pipe_node_1_self->_lf_out;
+    // Connect pipe.delay_1.out to port pipe.sink.in
+    pipe_sink_self->_lf_in = (sink_in_t*)&pipe_delay_1_self->_lf_out;
     // END Connect inputs and outputs for reactor pipe.sink.
     // Connect inputs and outputs for reactor pipe.node_1.
     // Connect pipe.delay.out to port pipe.node_1.in
     pipe_node_1_self->_lf_in = (node_in_t*)&pipe_delay_self->_lf_out;
     // END Connect inputs and outputs for reactor pipe.node_1.
+    // Connect inputs and outputs for reactor pipe.node_2.
+    // Connect pipe.delay_0.out to port pipe.node_2.in
+    pipe_node_2_self->_lf_in = (node_in_t*)&pipe_delay_0_self->_lf_out;
+    // END Connect inputs and outputs for reactor pipe.node_2.
     // Connect inputs and outputs for reactor pipe.delay.
     // Connect pipe.source.out to port pipe.delay.inp
     pipe_delay_self->_lf_inp = (_lf_gendelay_197ef_inp_t*)&pipe_source_self->_lf_out;
     // END Connect inputs and outputs for reactor pipe.delay.
+    // Connect inputs and outputs for reactor pipe.delay_0.
+    // Connect pipe.node_1.out to port pipe.delay_0.inp
+    pipe_delay_0_self->_lf_inp = (_lf_gendelay_197ef_inp_t*)&pipe_node_1_self->_lf_out;
+    // END Connect inputs and outputs for reactor pipe.delay_0.
+    // Connect inputs and outputs for reactor pipe.delay_1.
+    // Connect pipe.node_2.out to port pipe.delay_1.inp
+    pipe_delay_1_self->_lf_inp = (_lf_gendelay_197ef_inp_t*)&pipe_node_2_self->_lf_out;
+    // END Connect inputs and outputs for reactor pipe.delay_1.
     // END Connect inputs and outputs for reactor pipe.
     // Add action pipe.source._timer to array of is_present fields.
     _lf_is_present_fields[0] 
@@ -660,23 +1002,38 @@ void _lf_initialize_trigger_objects() {
     // Add action pipe.node_1.send_output to array of is_present fields.
     _lf_is_present_fields[1] 
             = &pipe_node_1_self->_lf_send_output.is_present;
-    // Add action pipe.delay.act to array of is_present fields.
+    // Add action pipe.node_2.send_output to array of is_present fields.
     _lf_is_present_fields[2] 
+            = &pipe_node_2_self->_lf_send_output.is_present;
+    // Add action pipe.delay.act to array of is_present fields.
+    _lf_is_present_fields[3] 
             = &pipe_delay_self->_lf_act.is_present;
+    // Add action pipe.delay_0.act to array of is_present fields.
+    _lf_is_present_fields[4] 
+            = &pipe_delay_0_self->_lf_act.is_present;
+    // Add action pipe.delay_1.act to array of is_present fields.
+    _lf_is_present_fields[5] 
+            = &pipe_delay_1_self->_lf_act.is_present;
     // Add port pipe.source.out to array of is_present fields.
-    _lf_is_present_fields[3] = &pipe_source_self->_lf_out.is_present;
+    _lf_is_present_fields[6] = &pipe_source_self->_lf_out.is_present;
     // Add port pipe.node_1.out to array of is_present fields.
-    _lf_is_present_fields[4] = &pipe_node_1_self->_lf_out.is_present;
+    _lf_is_present_fields[7] = &pipe_node_1_self->_lf_out.is_present;
+    // Add port pipe.node_2.out to array of is_present fields.
+    _lf_is_present_fields[8] = &pipe_node_2_self->_lf_out.is_present;
     // Add port pipe.delay.out to array of is_present fields.
-    _lf_is_present_fields[5] = &pipe_delay_self->_lf_out.is_present;
+    _lf_is_present_fields[9] = &pipe_delay_self->_lf_out.is_present;
+    // Add port pipe.delay_0.out to array of is_present fields.
+    _lf_is_present_fields[10] = &pipe_delay_0_self->_lf_out.is_present;
+    // Add port pipe.delay_1.out to array of is_present fields.
+    _lf_is_present_fields[11] = &pipe_delay_1_self->_lf_out.is_present;
     pipe_source_self->_lf__reaction_0.chain_id = 1;
     // index is the OR of level 0 and 
     // deadline 140737488355327 shifted left 16 bits.
     pipe_source_self->_lf__reaction_0.index = 0x7fffffffffff0000LL;
     pipe_sink_self->_lf__reaction_0.chain_id = 1;
-    // index is the OR of level 3 and 
+    // index is the OR of level 1 and 
     // deadline 140737488355327 shifted left 16 bits.
-    pipe_sink_self->_lf__reaction_0.index = 0x7fffffffffff0003LL;
+    pipe_sink_self->_lf__reaction_0.index = 0x7fffffffffff0001LL;
     pipe_node_1_self->_lf__reaction_0.chain_id = 1;
     // index is the OR of level 1 and 
     // deadline 140737488355327 shifted left 16 bits.
@@ -685,6 +1042,14 @@ void _lf_initialize_trigger_objects() {
     // index is the OR of level 2 and 
     // deadline 140737488355327 shifted left 16 bits.
     pipe_node_1_self->_lf__reaction_1.index = 0x7fffffffffff0002LL;
+    pipe_node_2_self->_lf__reaction_0.chain_id = 1;
+    // index is the OR of level 1 and 
+    // deadline 140737488355327 shifted left 16 bits.
+    pipe_node_2_self->_lf__reaction_0.index = 0x7fffffffffff0001LL;
+    pipe_node_2_self->_lf__reaction_1.chain_id = 1;
+    // index is the OR of level 2 and 
+    // deadline 140737488355327 shifted left 16 bits.
+    pipe_node_2_self->_lf__reaction_1.index = 0x7fffffffffff0002LL;
     pipe_delay_self->_lf__reaction_0.chain_id = 1;
     // index is the OR of level 0 and 
     // deadline 140737488355327 shifted left 16 bits.
@@ -693,6 +1058,22 @@ void _lf_initialize_trigger_objects() {
     // index is the OR of level 1 and 
     // deadline 140737488355327 shifted left 16 bits.
     pipe_delay_self->_lf__reaction_1.index = 0x7fffffffffff0001LL;
+    pipe_delay_0_self->_lf__reaction_0.chain_id = 1;
+    // index is the OR of level 0 and 
+    // deadline 140737488355327 shifted left 16 bits.
+    pipe_delay_0_self->_lf__reaction_0.index = 0x7fffffffffff0000LL;
+    pipe_delay_0_self->_lf__reaction_1.chain_id = 1;
+    // index is the OR of level 3 and 
+    // deadline 140737488355327 shifted left 16 bits.
+    pipe_delay_0_self->_lf__reaction_1.index = 0x7fffffffffff0003LL;
+    pipe_delay_1_self->_lf__reaction_0.chain_id = 1;
+    // index is the OR of level 0 and 
+    // deadline 140737488355327 shifted left 16 bits.
+    pipe_delay_1_self->_lf__reaction_0.index = 0x7fffffffffff0000LL;
+    pipe_delay_1_self->_lf__reaction_1.chain_id = 1;
+    // index is the OR of level 3 and 
+    // deadline 140737488355327 shifted left 16 bits.
+    pipe_delay_1_self->_lf__reaction_1.index = 0x7fffffffffff0003LL;
 }
 void _lf_trigger_startup_reactions() {
     

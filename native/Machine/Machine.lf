@@ -1,0 +1,48 @@
+target C {
+    verification: {
+        engine: uclid,
+        tactic: induction,
+        steps: 1
+    },
+    no-compile: true
+};
+
+reactor Controller {
+    
+    // input in:int;
+    output out:int;
+    state fault:int;
+
+    logical action turnOff(100 msec):int;
+
+    //@label Computation
+    @inv([[fault == 1] ==> schedule(turnOff, 0)] 
+            /\ [[fault == 0] ==> set(out, 1)])
+    reaction(startup) -> out, turnOff {=
+        // ... Run the machine and check fault
+
+        // If certain abnormal state occurs,
+        // trigger the alarm.
+        if (self->fault) {
+            schedule(setAlarm, 0);
+            return;
+        }
+        // Otherwise, perform computation and
+        // output the value normally.
+        SET(out, 1);
+    =}
+
+    //@label Stop
+    reaction(turnOff) {=
+        // Trigger the alarm
+    =}
+}
+
+// Should return a CEX indicating it happens within 3 secs.
+@property("machine_stops_within_3_secs_if_fault_occurs",
+   [[c.reaction[1] /\ c.fault == 1]
+       ==> [F[<= 100 msec][c.reaction[2]]]])
+@bound("machine_stops_within_3_secs_if_fault_occurs", 2)
+main reactor {
+   c =  new Controller();
+}

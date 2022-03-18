@@ -1,0 +1,337 @@
+/*******************************
+* Auto-generated UCLID5 model *
+******************************/
+module main {
+
+    /*******************************
+     * Time and Related Operations *
+     ******************************/
+    type timestamp_t = integer;                     // The unit is nanoseconds
+    type microstep_t = integer;
+    type tag_t = {
+        timestamp_t,
+        microstep_t
+    };
+    type interval_t  = tag_t;
+    
+    // Projection macros
+    define pi1(t : tag_t) : timestamp_t = t._1;     // Get timestamp from tag
+    define pi2(t : tag_t) : microstep_t = t._2;     // Get microstep from tag
+    
+    // Interval constructor
+    define zero() : interval_t
+    = {0, 0};
+    define startup() : interval_t
+    = zero();
+    define mstep() : interval_t
+    = {0, 1};
+    define nsec(t : integer) : interval_t
+    = {t, 0};
+    define usec(t : integer) : interval_t
+    = {t * 1000, 0};
+    define msec(t : integer) : interval_t
+    = {t * 1000000, 0};
+    define sec(t : integer) : interval_t
+    = {t * 1000000000, 0};
+    define inf() : interval_t
+    = {-1, 0};
+    
+    // Helper function
+    define isInf(i : interval_t) : boolean
+    = pi1(i) < 0;
+    
+    // Tag comparison
+    define tag_later(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) > pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) > pi2(t2))
+        || (isInf(t1) && !isInf(t2));
+    
+    define tag_same(t1 : tag_t, t2 : tag_t) : boolean
+    = t1 == t2;
+    
+    define tag_earlier(t1 : tag_t, t2 : tag_t) : boolean
+    = pi1(t1) < pi1(t2)
+        || (pi1(t1) == pi1(t2) && pi2(t1) < pi2(t2))
+        || (!isInf(t1) && isInf(t2));
+    
+    // mstep() produces a mstep delay. zero() produces no delay.
+    define tag_schedule(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 1)
+        then { pi1(t), pi2(t) + 1 } // microstep delay
+        else ( if (!isInf(t) && !isInf(i) && pi1(i) == 0 && pi2(i) == 0)
+                then t // no delay
+                else (
+                    if (!isInf(t) && pi1(i) > 0 && !isInf(i))
+                    then { pi1(t) + pi1(i), 0 }
+                    else inf()
+                ));
+    
+    // Deprecated.
+    define tag_delay(t : tag_t, i : interval_t) : tag_t
+    = if (!isInf(t) && !isInf(i))
+        then { pi1(t) + pi1(i), pi2(t) + pi2(i) }
+        else inf();
+    
+    // Only consider timestamp for now.
+    define tag_diff(t1, t2: tag_t) : interval_t
+    = if (!isInf(t1) && !isInf(t2))
+        then { pi1(t1) - pi1(t2), pi2(t1) - pi2(t2) }
+        else inf();
+    
+    /**********************************
+     * Reaction IDs & State Variables *
+     *********************************/
+    
+    //////////////////////////
+    // Application Specific
+    // Reaction ids
+    type rxn_t = enum {
+        Alarm_r_reaction_0,
+        Alarm_r_reaction_1,
+        NULL
+    };
+    type state_t = {
+        integer,    // Alarm_r_in
+        integer,    // Alarm_r_out
+        integer,    // Alarm_r_setAlarm
+        integer    // Alarm_r_err
+    };
+    // State variable projection macros
+    define Alarm_r_in(s : state_t) : integer = s._1;
+    define Alarm_r_out(s : state_t) : integer = s._2;
+    define Alarm_r_setAlarm(s : state_t) : integer = s._3;
+    define Alarm_r_err(s : state_t) : integer = s._4;
+    
+    type trigger_t = {
+        boolean,    // Alarm_r_in
+        boolean,    // Alarm_r_out
+        boolean    // Alarm_r_setAlarm
+    };
+    // Trigger presence projection macros
+    define Alarm_r_in_is_present(t : trigger_t) : boolean = t._1;
+    define Alarm_r_out_is_present(t : trigger_t) : boolean = t._2;
+    define Alarm_r_setAlarm_is_present(t : trigger_t) : boolean = t._3;
+    
+    /***************************
+    * Topological Abstraction *
+    ***************************/
+    // Non-federated "happened-before"
+    define hb(e1, e2 : event_t) : boolean
+    = tag_earlier(e1._2, e2._2)
+            || (tag_same(e1._2, e2._2) && (
+            (e1._1 == Alarm_r_reaction_0 && e2._1 == Alarm_r_reaction_1)
+            ));
+    
+    define startup_triggers(n : rxn_t) : boolean
+    =   // if startup is within frame, put the events in the trace.
+        ((start == 0) ==> (finite_exists (i : integer) in indices :: in_range(i)
+            && rxn(i) == n && tag_same(g(i), zero())));
+    
+    /*********************
+     * Reactor Semantics *
+     *********************/
+    /** transition relation **/
+    // transition relation constrains future states
+    // based on previous states.
+    
+    // Events are ordered by "happened-before" relation.
+    axiom(finite_forall (i : integer) in indices :: (finite_forall (j : integer) in indices :: (in_range(i) && in_range(j))
+        ==> (hb(elem(i), elem(j)) ==> i < j)));
+    
+    // the same event can only trigger once in a logical instant
+    axiom(finite_forall (i : integer) in indices :: (finite_forall (j : integer) in indices :: (in_range(i) && in_range(j))
+        ==> ((rxn(i) == rxn(j) && i != j)
+            ==> !tag_same(g(i), g(j)))));
+    
+    // Tags should be positive
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END)
+        ==> pi1(g(i)) >= 0);
+    
+    // Microsteps should be positive
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END)
+        ==> pi2(g(i)) >= 0);
+    
+    // Begin the frame at the start time specified.
+    define start_frame(i : step_t) : boolean =
+        (tag_same(g(i), {start, 0}) || tag_later(g(i), {start, 0}));
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END)
+        ==> start_frame(i));
+    
+    // NULL events should appear in the suffix, except for START.
+    axiom(finite_forall (j : integer) in indices :: (j > START && j <= END) ==> (
+        (rxn(j)) != NULL) ==> 
+            (finite_forall (i : integer) in indices :: (i > START && i < j) ==> (rxn(i) != NULL)));
+    
+    // When a NULL event occurs, the state stays the same.
+    axiom(finite_forall (j : integer) in indices :: (j > START && j <= END) ==> (
+        (rxn(j) == NULL) ==> (s(j) == s(j-1))
+    ));
+    
+    /***************************
+    * Connections and Actions *
+    ***************************/
+    
+    // If Alarm_r_setAlarm is present, then there exists a Alarm_r_reaction_0
+    // that scheduled it.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ( true
+        // If Alarm_r_setAlarm is present, there exists an Alarm_r_reaction_0.
+        // This additional term establishes a one-to-one relationship in timing.
+        && (Alarm_r_setAlarm_is_present(t(i)) ==> (
+            finite_exists (j : integer) in indices :: j >= START && j < i
+            && rxn(j) == Alarm_r_reaction_0
+            && g(i) == tag_schedule(g(j), nsec(2000000000))
+        ))
+        // If Alarm_r_setAlarm is not present, then value stays the same.
+        && (!Alarm_r_setAlarm_is_present(t(i)) ==> (
+            Alarm_r_setAlarm(s(i)) == Alarm_r_setAlarm(s(i-1))
+        ))
+    ));
+    
+    /********************************
+    * Reactions and Their Triggers *
+    ********************************/
+    
+    // Alarm.r.reaction_0 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || Alarm_r_in_is_present(t(i))
+    ) <==> (rxn(i) == Alarm_r_reaction_0)));
+    
+    // Alarm.r.reaction_1 is invoked when any of it triggers are present.
+    axiom(finite_forall (i : integer) in indices :: (i > START && i <= END) ==> ((
+        false
+        || Alarm_r_setAlarm_is_present(t(i))
+    ) <==> (rxn(i) == Alarm_r_reaction_1)));
+    
+    /**********************
+    * Startup & Shutdown *
+    **********************/         
+    
+    /*********************
+     * Initial Condition *
+     *********************/
+    // FIXME: add template
+    define initial_condition() : boolean
+    = start == 0
+        && rxn(0) == NULL
+        && g(0) == {0, 0}
+        && Alarm_r_in(s(0)) == 0
+        && Alarm_r_out(s(0)) == 0
+        && Alarm_r_setAlarm(s(0)) == 0
+        && Alarm_r_err(s(0)) == 0
+        && !Alarm_r_in_is_present(t(0))
+        && !Alarm_r_out_is_present(t(0))
+        && !Alarm_r_setAlarm_is_present(t(0))
+        ;
+        
+    /*********************
+    * Reactor Contracts *
+    *********************/
+    
+    /**********************
+    * Reaction Contracts *
+    **********************/
+    
+    /* Pre/post conditions for Alarm.r.reaction_0 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == Alarm_r_reaction_0 ==> ( true
+        //// Line 18 in the LF program
+        && ((((((((((((((((Alarm_r_err(s(i))))== (1)))))))))) ==> (((((((i < END) ==> (finite_exists (i0 : integer) in indices :: i0 > i && Alarm_r_setAlarm_is_present(t(i0)) && Alarm_r_setAlarm(s(i0)) == 0 && g(i0) == tag_schedule(g(i), nsec(2000000000))))
+        || (
+            (finite_forall (x0 : integer) in indices :: (x0 > i && x0 <= END) ==> (
+            rxn(x0) != NULL 
+            // && !Alarm_r_setAlarm_is_present(t(x0))
+            && (tag_same(g(x0), tag_schedule(g(i), nsec(2000000000)))
+            || tag_earlier(g(x0), tag_schedule(g(i), nsec(2000000000)))
+            )))
+        ))))))))&&(((((((((((((Alarm_r_err(s(i))))== (0)))))))))) ==> (((((Alarm_r_out_is_present(t(i)) && Alarm_r_out(s(i)) == 1))))))))))
+    )));
+    
+    /* Pre/post conditions for Alarm.r.reaction_1 */
+    axiom(finite_forall (i : integer) in indices :: (i >= START && i <= END) ==>
+        (rxn(i) == Alarm_r_reaction_1 ==> ( true
+        && Alarm_r_out(s(i)) == Alarm_r_out(s(i-1))
+        && Alarm_r_setAlarm(s(i)) == Alarm_r_setAlarm(s(i-1))
+        && Alarm_r_err(s(i)) == Alarm_r_err(s(i-1))
+        && !Alarm_r_in_is_present(t(i))
+        && !Alarm_r_out_is_present(t(i))
+    )));
+    
+    /************
+    * Property *
+    ************/
+    
+    // The FOL property translated from user-defined LTL property
+    define P(i : step_t) : boolean =
+        true
+        //// Line 40 in the LF program
+        && ((((!((((!(finite_exists (i0 : integer) in indices :: i0 >= i && i0 <= END && !((((((((((rxn(i0) == Alarm_r_reaction_0)))&&(((((Alarm_r_err(s(i0))))== (1)))))))))) ==> (((((((finite_exists (i1 : integer) in indices :: i1 >= i0 && i1 <= END && ((((((rxn(i1) == Alarm_r_reaction_1)))))) && (tag_earlier(g(i1), tag_schedule(g(i0), nsec(3000000000))) || tag_same(g(i1), tag_schedule(g(i0), nsec(3000000000))))))||((!(finite_exists (i1 : integer) in indices :: i1 >= i0 && i1 <= END && !((((!((rxn(i1) == Alarm_r_reaction_1))))))))))))))))))))))))
+    ;
+    
+    /*******
+     * BMC *
+     *******/
+    property bmc_alarm_works : initial_condition() ==> P(0);
+    
+    /********************
+     * Trace Definition *
+     *******************/
+    const START : integer = 0;
+    const END : integer = 4;
+    group indices : integer = {
+        0,
+        1,
+        2,
+        3,
+        4
+    };
+    define in_range(num : integer) : boolean
+    = num >= START && num <= END;
+    
+    type step_t = integer;
+    type event_t = { rxn_t, tag_t, state_t, trigger_t };
+    
+    // Create a bounded trace of 5 events.
+    type trace_t = {
+        event_t,
+        event_t,
+        event_t,
+        event_t,
+        event_t
+    };
+    
+    // mark the start of the trace.
+    var start : timestamp_t;
+    
+    // declare the trace
+    var trace : trace_t;
+    
+    /*****************
+     * Helper Macros *
+     ****************/
+    // helper macro that returns an element based on index
+    define get(tr : trace_t, i : step_t) : event_t =
+    if (i == 0) then tr._1 else (
+    if (i == 1) then tr._2 else (
+    if (i == 2) then tr._3 else (
+    if (i == 3) then tr._4 else (
+    if (i == 4) then tr._5 else (
+    { NULL, inf(), { 0, 0, 0, 0 }, { false, false, false } } )))));
+    
+    define elem(i : step_t) : event_t
+    = get(trace, i);
+    
+    // projection macros
+    define rxn      (i : step_t) : rxn_t        = elem(i)._1;
+    define g        (i : step_t) : tag_t        = elem(i)._2;
+    define s        (i : step_t) : state_t      = elem(i)._3;
+    define t        (i : step_t) : trigger_t    = elem(i)._4;
+    define isNULL   (i : step_t) : boolean      = rxn(i) == NULL;
+    
+    control {
+        v = bmc(0);
+        check;
+        print_results;
+        v.print_cex;
+    }
+}

@@ -9,12 +9,34 @@
  *
  *     Adapted from [(Kobayashi, Nakade and Yonezawa, 1995)](http://dx.doi.org/10.1007/3-540-60360-3_42)
  */
-target C {
+ target C {
     verification: {
         engine: uclid,
-        induction: 2
-    }
+        tactic: induction,
+        steps: 2
+    },
+    no-compile: true
 };
+
+reactor Source {
+
+    output out:int;
+    logical action _timer(1 sec):int;
+
+    @inv(set(out, 1))
+    @inv(schedule(_timer, 0))
+    reaction(startup, _timer) -> out, _timer {=
+        SET(out, 1);
+        schedule(_timer, 0);
+    =}
+}
+
+reactor Sink {
+    input in:int;
+    reaction(in) {=
+        printf("Received after pipeline: %d\n", in->value);
+    =}
+}
 
 reactor Node {
     
@@ -24,84 +46,52 @@ reactor Node {
     state  count:int;
     state  payload:int;
 
-    logical action send_output;
-    
-    // @inv(payload == in 
-    //     /\ count == (prev(count) + 1) 
-    //     /\ F[reaction[2] /\ at(0 sec)])
+    logical action send_output:int;
+
+    @inv(payload == in)
+    @inv(count == (prev(count) + 1))
+    @inv(schedule(send_output, 0)) // Dummy payload
     reaction(in) -> send_output {=
         self->payload = in->value;
         self->count++;
         schedule(send_output, 0);
     =}
 
-    // @inv(out == payload
-    //     /\ count == (prev(count) - 1))
+    @inv(set(out, 1)) // FIXME: reference payload
+    @inv(count == (prev(count) - 1))
     reaction(send_output) -> out {=
         SET(out, self->payload);
         self->count--;
     =}
 }
 
-// FIXME: Not passing since the consecution step assume state is initially 1. How to fix this?
-// Soln: Add an auxiliary invariant that says when pipe_reaction_0 triggers, node_1_count is 0.
-//
-// TODOs from this small example:
-// 1. Make sure to add grammar to express "produces output."
-// 2. Make sure the default behavior for NULL is not outputting value.
-// 3. Make sure for consecution step, we should disable NULL in the first state, otherwise 1-induction sometimes does not work. See the example if you make steps 6.
-//
-// LTL: G(node_1.count <= 1)
-// @property("count_leq_1", "pipe_node_1_count(s(i)) <= 1")
-// @bound("count_leq_1", 4)
-// @aux("count_leq_1", "pipe_node_1_count(s(i)) >= 0")
-// @aux("count_leq_1", "rxn(i) == pipe_reaction_0 ==> pipe_node_1_count(s(i)) == 0")
-//
-// @property("count_leq_1", 
-//     node_1.count <= 1
-//     /\ node_2.count <= 1
-//     /\ node_3.count <= 1
-//     /\ node_4.count <= 1
-//     /\ node_5.count <= 1
-// )
-// @bound("count_leq_1", 20)
-// @aux("count_leq_1", reaction[1] ==> [node_1.count == 0])
-// @property("test", false)
-// @bound("test", 2)
-// @property("count",
-//     ![node_1.count <= 1
-//     /\ node_2.count <= 1]
-// )
-// @property("count",false)
-// @bound("count", 7)
+// @property("sink_receives_in_time", 
+//     source.reaction[1] ==> 
+//         [!sink.reaction[1]] W[6 sec] [sink.reaction[1]])
+// @bound("sink_receives_in_time", 5)
+// //// Main property
+@property("at_most_one_message", 
+    [node_1.count <= 1
+    /\ node_2.count <= 1
+    /\ node_3.count <= 1
+    /\ node_4.count <= 1
+    /\ node_5.count <= 1]
+)
+@bound("at_most_one_message", 1)
 main reactor {
     
+    source = new Source();
+    sink = new Sink();
     node_1 = new Node();
     node_2 = new Node();
-    // node_3 = new Node();
-    // node_4 = new Node();
-    // node_5 = new Node();
+    node_3 = new Node();
+    node_4 = new Node();
+    node_5 = new Node();
 
+    source.out -> node_1.in after 1 sec;
     node_1.out -> node_2.in after 1 sec;
-    // node_2.out -> node_3.in after 1 sec;
-    // node_3.out -> node_4.in after 1 sec;
-    // node_4.out -> node_5.in after 1 sec;
-
-    timer t(0, 1 sec);
-    state value:int(0);
-
-    // @inv(node_1.in == value
-    //     /\ value == (prev(value) + 1)
-    //     /\ F[node_1.reaction[1] /\ simultaneous])
-    // @inv(node_1.in == value
-    //     /\ value == (prev(value) + 1))
-    // FIXME: Why does the contraint below blocks the solver?
-    // @inv(set(node_1.in, value) /\ value == prev(value) + 1)
-    reaction(t) -> node_1.in {=
-        SET(node_1.in, self->value++);
-    =}
-
-    reaction(node_2.out) {=
-        printf("Received after pipeline: %d\n", node_2.out->value);
-    =}
+    node_2.out -> node_3.in after 1 sec;
+    node_3.out -> node_4.in after 1 sec;
+    node_4.out -> node_5.in after 1 sec;
+    node_5.out -> sink.in after 1 sec;
 }

@@ -12,14 +12,16 @@
 target C {
     verification: {
         engine: uclid,
-        induction: 3
-    }
+        tactic: induction,
+        steps: 2
+    },
+    no-compile: true
 };
 
 reactor Source {
 
     output out:int;
-    logical action _timer(900 msec):int;
+    logical action _timer(1 sec):int;
 
     @inv(set(out, 1))
     @inv(schedule(_timer, 0))
@@ -63,15 +65,38 @@ reactor Node {
     =}
 }
 
-@property("count", false)
-@bound("count", 5)
+//// Both version works.
+// @property("sink_receives_in_time_weaker", 
+//     source.reaction[1] ==> 
+//         [F[sink.reaction[1] /\ within(500 msec)]
+//         \/ G[!sink.reaction[1]]])
+// @bound("sink_receives_in_time_weaker", 5)
+// @property("sink_receives_in_time_weaker", 
+//     source.reaction[1] ==> 
+//         [!sink.reaction[1]] W [sink.reaction[1] /\ within(500 msec)])
+// @bound("sink_receives_in_time_weaker", 5)
+//// Main property
+@property("at_most_one_message", 
+    [node_1.count <= 1
+    /\ node_2.count <= 1]
+)
+// This should not be 1, since it depends on
+// the rate of the timer.
+// node_1.count <= 1 alone should have a bound of 2.
+// Circuits are perfectly synchronous, so a bound of 1
+// is enough. But for sparse synchronous systems,
+// we need to account for event rate.
+//
+// We need to have a timer of 900 msec effect to propagate.
+@bound("at_most_one_message", 1)
 main reactor {
     
     source = new Source();
     sink = new Sink();
     node_1 = new Node();
+    node_2 = new Node();
 
-    // source.out -> sink.in after 1 sec;
     source.out -> node_1.in after 1 sec;
-    node_1.out -> sink.in;
+    node_1.out -> node_2.in after 1 sec;
+    node_2.out -> sink.in after 1 sec;
 }

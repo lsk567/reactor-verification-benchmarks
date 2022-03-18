@@ -1,0 +1,69 @@
+target C {
+    verification: {
+       engine: uclid,
+       tactic: bmc,
+       steps: 5
+    },
+    no-compile: true
+};
+
+reactor Machine {
+    
+    input in:int;
+    output out:int;
+    state done:int;
+    state fault:int(1);
+
+    logical action turnOff(2 sec):int;
+
+    // @inv([[err == 1] ==> schedule(setAlarm, 0)] 
+    //     /\ [[err == 0] ==> set(out, 1)])
+    // @inv(schedule(turnOff, 0))
+    reaction(in) -> turnOff {=
+        // If certain abnormal state occurs,
+        // trigger the alarm.
+        if (self->fault) {
+            schedule(setAlarm, 0);
+            return;
+        }
+        // Otherwise, perform computation and
+        // output the value normally.
+        SET(out, 1);
+    =}
+
+    reaction(turnOff) {=
+        // Turn off the machine
+    =}
+}
+
+reactor Upstream {
+    output out:int;
+    // timer t(0, 1 minute);
+
+    @inv(set(out, 1))
+    reaction(startup) -> out {==}
+}
+
+reactor Downstream {
+    input in:int;
+    reaction(in) {==}
+}
+
+// @property("turns_off_1_second_after_fault_since_last_input",
+//     G[<= 3 sec][[machine.reaction[1]] ==> [
+//         F[<= 1 sec][machine.reaction[2]]]
+// ])
+@property("turns_off_1_second_after_fault_since_last_input",
+    false)
+//@bound("alarm_works", 2)
+//@property("alarm_works",
+//     [[r.reaction[1] /\ r.err == 1]
+//         ==> [F[<= 3 sec][r.reaction[2] /\ F[<= 15 sec][true]] \/ G[<= 10 sec][!r.reaction[2]]]])
+main reactor {
+   machine =  new Machine();
+   upstream = new Upstream();
+   downstream = new Downstream();
+   
+   upstream.out -> machine.in;
+   machine.out -> downstream.in after 1 sec;
+}
